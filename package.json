@@ -1,0 +1,41 @@
+{
+  "name": "monaco-esbuild",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs --watch",
+    "test": "npm run typecheck && npm run lint",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@file-services/commonjs": "^7.2.5",
+    "@file-services/path": "^7.2.5",
+    "buffer": "^6.0.3",
+    "isomorphic-git": "^1.23.0",
+    "monaco-editor-core": "^0.37.1",
+    "monaco-languages": "^2.11.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
+    "@types/node": "^18.16.3",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "esbuild": "^0.17.18",
+    "esbuild-css-modules-plugin": "^2.7.1",
+    "eslint": "^8.39.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "sass": "^1.62.1",
+    "typescript": "~5.0.4"
+  },
+  "keywords": [],
+  "author": ""
+}

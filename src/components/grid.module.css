@@ -1,0 +1,134 @@
+.disableSelection {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+.grid {
+  --x-divider: 5px;
+  display: grid;
+  grid-template-areas:
+    "header header header header header"
+    "t-div t-div t-div t-div t-div"
+    "left l-div main r-div right"
+    "left l-div b-div r-div right"
+    "left l-div footer r-div right";
+  grid-template-columns:
+    var(--x-left, 20%)
+    var(--x-divider)
+    minmax(0, 1fr)
+    var(--x-divider)
+    var(--x-right, 2%);
+  grid-template-rows:
+    var(--x-top, 5%)
+    var(--x-divider)
+    minmax(0, 1fr) var(--x-divider)
+    var(--x-bottom, 3%);
+  height: 100%;
+}
+
+.grid > * {
+  display: block;
+  overflow: auto;
+}
+
+.header {
+  background: hsla(0, 65%, 33%, 0.4);
+  grid-area: header;
+  /* grid-row-start: header; */
+  /* grid-row-end: t-div; */
+  display: flex;
+  position: relative;
+}
+
+.main {
+  background: hsla(40, 80%, 80%, 0.4);
+  grid-area: main;
+}
+
+.left {
+  background: hsla(80, 80%, 80%, 0.4);
+  grid-area: left;
+  /* grid-column-start: left; */
+  /* grid-column-end: l-div; */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.right {
+  background: hsla(120, 80%, 80%, 0.4);
+  grid-area: right;
+  /* grid-column-start: r-div; */
+  /* grid-column-end: right; */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.footer {
+  background: hsla(160, 80%, 80%, 0.4);
+  grid-area: footer;
+  /* grid-row-start: b-div; */
+  /* grid-row-end: footer; */
+  display: flex;
+  position: relative;
+}
+
+.divider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.divider:hover,
+.divider:active {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.grid:active .divider:not(:active) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:empty + .divider {
+  display: none;
+}
+
+.header + .divider {
+  grid-area: t-div;
+  cursor: ns-resize;
+}
+
+.footer + .divider {
+  grid-area: b-div;
+  cursor: ns-resize;
+}
+
+.left + .divider {
+  grid-area: l-div;
+  cursor: ew-resize;
+}
+
+.right + .divider {
+  grid-area: r-div;
+  cursor: ew-resize;
+}
+
+::-webkit-scrollbar {
+  width: 0.4em;
+  height: 0.4em;
+}
+
+::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 0.2em;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
