@@ -1,7 +1,7 @@
 {
-  "name": "monaco-esbuild",
+  "name": "@wixc3/core3-playground",
   "version": "1.0.0",
-  "description": "",
+  "description": "Playground to test various stuff...",
   "private": true,
   "type": "module",
   "scripts": {
@@ -37,5 +37,5 @@
     "typescript": "~5.0.4"
   },
   "keywords": [],
-  "author": ""
+  "author": "Wix.com"
 }
