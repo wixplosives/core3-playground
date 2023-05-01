@@ -1,6 +1,6 @@
 {
-  "short_name": "monaco-esbuild",
-  "name": "monaco-esbuild",
+  "short_name": "core3-playground",
+  "name": "core3-playground",
   "icons": [
     {
       "src": "favicon.ico",
