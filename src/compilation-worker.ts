@@ -29,7 +29,7 @@ async function initializeEnvLibs({ libVersions }: Initialize) {
 
   const sass = evaluateSassLib(sassURL.href, sassLibText, immutableLibText, immutableURL.href);
   const ts = evaluateTypescriptLib(typescriptURL.href, typescriptLibText);
-  console.log(`Worker initialized.`);
+
   console.log(`typescript ${ts.version}`);
   console.log(sass.info);
 }

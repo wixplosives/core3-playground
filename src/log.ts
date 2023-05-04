@@ -1,4 +1,6 @@
 // eslint-disable-next-line no-console
+export const log = (message: string) => console.log(message);
+// eslint-disable-next-line no-console
 export const logError = (message: string) => console.error(message);
 
 export function errorToString(error: unknown): string {

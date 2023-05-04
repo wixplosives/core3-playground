@@ -2,7 +2,13 @@ import type { CompilationWorkerProtocol } from "./compilation-protocol";
 
 export type CompilationListener = (message: CompilationWorkerProtocol) => void;
 
-export function createCompilationWorker(onMessage: CompilationListener) {
+export interface CompilationWorker {
+  worker: Worker;
+  postMessage: (message: CompilationWorkerProtocol) => void;
+  dispose: () => void;
+}
+
+export function createCompilationWorker(onMessage: CompilationListener): CompilationWorker {
   const worker = new Worker("compilation-worker.js", { name: "Compilation" });
 
   const messageListener = ({ data }: MessageEvent<CompilationWorkerProtocol>) => onMessage(data);
