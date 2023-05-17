@@ -4,7 +4,9 @@ import fs from "node:fs/promises";
 import { build, context } from "esbuild";
 import cssModulesPlugin from "esbuild-css-modules-plugin";
 import { globalExternals } from "@fal-works/esbuild-plugin-global-externals";
+import open from "open";
 
+const port = 8000;
 const isWatch = process.argv.includes("--watch") || process.argv.includes("-w");
 const outPath = new URL("../dist/", import.meta.url);
 const publicPath = new URL("../public/", import.meta.url);
@@ -18,6 +20,7 @@ const buildOptions = {
   legalComments: "none",
   bundle: true,
   entryPoints: ["src/main.ts", "src/compilation-worker.ts"],
+  entryNames: "[name]",
   loader: {
     ".ts": "tsx",
     ".json": "json",
@@ -60,8 +63,9 @@ await buildVendors();
 
 if (isWatch) {
   const buildContext = await context(buildOptions);
-  await buildContext.serve({ servedir: "dist" });
+  await buildContext.serve({ servedir: "dist", port });
   await buildContext.watch();
+  await open(`http://localhost:${port}`);
 } else {
   await build(buildOptions);
 }
