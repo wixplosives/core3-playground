@@ -7,7 +7,7 @@ const deflate = promisify(deflateCb);
 const bytesInKB = 1024;
 const bytesInMB = bytesInKB * 1024;
 const distURL = new URL("../dist/", import.meta.url);
-console.log("<name>".padStart(30))
+
 await printDirectoryDeep("dist", distURL);
 
 async function printDirectoryDeep(directoryName, directoryURL, padding = 0) {
