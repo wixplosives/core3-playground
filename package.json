@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@file-services/commonjs": "^7.2.5",
-    "@file-services/path": "^7.2.5",
+    "@file-services/commonjs": "^7.3.0",
+    "@file-services/path": "^7.3.0",
     "buffer": "^6.0.3",
     "isomorphic-git": "^1.23.0",
     "monaco-editor-core": "^0.38.0",
@@ -26,8 +26,8 @@
     "@types/node": "18",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
-    "@typescript-eslint/eslint-plugin": "^5.59.2",
-    "esbuild": "^0.17.18",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "esbuild": "^0.17.19",
     "esbuild-css-modules-plugin": "^2.7.1",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
