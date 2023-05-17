@@ -1,8 +1,8 @@
 // monaco
-import { type IMemFileSystem } from "./fs/memory-fs";
-// import { cloneGitRepo } from "./git";
+import type { IFileSystem } from "./fs/fs-api";
 import { createCodeEditor } from "./create-code-editor";
-import "./main.css";
+// import { createMemoryFs } from "./fs/memory-fs";
+// import { cloneGitRepo } from "./git";
 
 globalThis.MonacoEnvironment = {
   getWorker: function (_moduleId: unknown, _label: string) {
@@ -10,19 +10,19 @@ globalThis.MonacoEnvironment = {
   },
 };
 
-declare namespace globalThis {
-  let MonacoEnvironment: import("monaco-editor-core").Environment | undefined;
-  let fs: IMemFileSystem;
-}
-
 const codeEditorRootEl = document.getElementById("root") ?? document.body.appendChild(document.createElement("div"));
 createCodeEditor(codeEditorRootEl);
 // const fs = createMemoryFs();
 
 // const githubRepo = "wix/stylable";
 // const repoUrl = `https://github.com/${githubRepo}`;
-// const fs = await cloneGitRepo(repoUrl);
+// await cloneGitRepo(fs, repoUrl);
 // globalThis.fs = fs;
 
 // const content = await fs.promises.readFile("/README.md", "utf8");
 // codeEditor.setValue(content);
+
+declare namespace globalThis {
+  let MonacoEnvironment: import("monaco-editor-core").Environment | undefined;
+  let fs: IFileSystem;
+}
