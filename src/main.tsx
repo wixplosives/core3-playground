@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { Editor } from "./components/editor";
-import { createCompilationWorker, type CompilationListener, type CompilationWorker } from "./compilation";
-import { errorToString, log, logError } from "./log";
+import { createRPCWorker } from "./rpc/rpc-worker";
+import type { Compilation } from "./compilation/compilation-worker";
 // import "./monaco-main";
 import "./variables.css";
 import "./main.css";
@@ -9,28 +9,19 @@ import "./main.css";
 const reactRoot = createRoot(document.getElementById("root")!);
 reactRoot.render(<Editor />);
 
-const onCompilationMessage: CompilationListener = (message) => {
-  switch (message.type) {
-    case "initialized":
-      log(`Worker initialized.`);
-      break;
-    case "error":
-      logError(`Compilation Error: ${errorToString(message.error)}`);
-      break;
-  }
-};
-const compilation = createCompilationWorker(onCompilationMessage);
-globalThis.compilation = compilation;
+const compilationWorkerURL = new URL("compilation-worker.js", import.meta.url);
+const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, "Compilation");
 
-compilation.postMessage({
-  type: "init",
-  libVersions: {
-    typescript: "5.0.4",
-    sass: "1.62.1",
-    immutable: "4.3.0",
-  },
+await compilationWorker.api.initialize({
+  typescript: "5.0.4",
+  sass: "1.62.1",
+  immutable: "4.3.0",
 });
 
+// log(await compilationWorker.api.compile("/a.tsx", `export const a = <div />;`));
+
+globalThis.compilation = compilationWorker;
+
 declare namespace globalThis {
-  let compilation: CompilationWorker;
+  let compilation: typeof compilationWorker;
 }
