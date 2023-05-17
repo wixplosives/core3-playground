@@ -1,8 +1,7 @@
-import git from "isomorphic-git";
+import git, { type PromiseFsClient } from "isomorphic-git";
 import http from "isomorphic-git/http/web";
-import { type IMemFileSystem } from "./fs/memory-fs";
 
-export async function cloneGitRepo(fs: IMemFileSystem, repoUrl: string): Promise<void> {
+export async function cloneGitRepo(fs: PromiseFsClient, repoUrl: string): Promise<void> {
   await git.clone({
     fs,
     http,
