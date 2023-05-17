@@ -5,9 +5,9 @@ export interface Tab {
 }
 
 export interface TabsProps {
-  tabs: Tab[];
+  tabs?: Tab[];
 }
 
-export const Tabs: React.FC<TabsProps> = ({ tabs }) => {
-  return <main>{tabs.map(({ title }) => `[${title}]`)}</main>;
+export const Tabs: React.FC<TabsProps> = () => {
+  return <main>Main Content</main>;
 };

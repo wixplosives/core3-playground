@@ -4,3 +4,14 @@ body,
   margin: 0;
   height: 100%;
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  background-color: var(--darker-background);
+  font-family: var(--primary-font-family);
+}

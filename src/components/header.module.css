@@ -1,0 +1,3 @@
+.logo:hover {
+  color: var(--accent-color, currentColor);
+}

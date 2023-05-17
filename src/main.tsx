@@ -1,7 +1,13 @@
+import { createRoot } from "react-dom/client";
+import { Editor } from "./components/editor";
 import { createCompilationWorker, type CompilationListener, type CompilationWorker } from "./compilation";
 import { errorToString, log, logError } from "./log";
-import "./monaco-main";
-// import "./react-main";
+// import "./monaco-main";
+import "./variables.css";
+import "./main.css";
+
+const reactRoot = createRoot(document.getElementById("root")!);
+reactRoot.render(<Editor />);
 
 const onCompilationMessage: CompilationListener = (message) => {
   switch (message.type) {

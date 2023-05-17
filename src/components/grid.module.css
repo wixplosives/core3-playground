@@ -7,23 +7,25 @@
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
+
 .grid {
-  --x-divider: 5px;
+  color: var(--text-color);
+  --x-divider: 3px;
   display: grid;
   grid-template-areas:
-    "header header header header header"
-    "t-div t-div t-div t-div t-div"
+    "header header header r-div right"
+    "t-div t-div t-div r-div right"
     "left l-div main r-div right"
-    "left l-div b-div r-div right"
-    "left l-div footer r-div right";
+    "b-div b-div b-div b-div b-div"
+    "footer footer footer footer footer";
   grid-template-columns:
-    var(--x-left, 20%)
+    var(--x-left, 1fr)
     var(--x-divider)
-    minmax(0, 1fr)
+    minmax(0, 20%)
     var(--x-divider)
-    var(--x-right, 2%);
+    var(--x-right, 3%);
   grid-template-rows:
-    var(--x-top, 5%)
+    auto
     var(--x-divider)
     minmax(0, 1fr) var(--x-divider)
     var(--x-bottom, 3%);
@@ -36,59 +38,48 @@
 }
 
 .header {
-  background: hsla(0, 65%, 33%, 0.4);
   grid-area: header;
-  /* grid-row-start: header; */
-  /* grid-row-end: t-div; */
   display: flex;
   position: relative;
+  padding: 0.6em;
 }
 
 .main {
-  background: hsla(40, 80%, 80%, 0.4);
   grid-area: main;
 }
 
 .left {
-  background: hsla(80, 80%, 80%, 0.4);
+  background: var(--dark-background);
   grid-area: left;
-  /* grid-column-start: left; */
-  /* grid-column-end: l-div; */
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
 .right {
-  background: hsla(120, 80%, 80%, 0.4);
   grid-area: right;
-  /* grid-column-start: r-div; */
-  /* grid-column-end: right; */
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
 .footer {
-  background: hsla(160, 80%, 80%, 0.4);
   grid-area: footer;
-  /* grid-row-start: b-div; */
-  /* grid-row-end: footer; */
   display: flex;
   position: relative;
 }
 
 .divider {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--dark-background);
 }
 
 .divider:hover,
 .divider:active {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--divider-hover);
 }
 
 .grid:active .divider:not(:active) {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--dark-background);
 }
 
 :empty + .divider {
