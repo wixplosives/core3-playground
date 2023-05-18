@@ -1,12 +1,12 @@
-import type { CallProtocol, ResponseProtocol } from "./rpc-types";
+import type { RpcCall, RpcResponse } from "./rpc-types";
 
 export interface ResponderOptions<API> {
   api: API;
-  dispatchResponse(response: ResponseProtocol<API>): void;
+  dispatchResponse(response: RpcResponse<API>): void;
 }
 
 export function rpcResponder<API>({ api, dispatchResponse }: ResponderOptions<API>) {
-  async function onCall({ id, methodName, args, type }: CallProtocol<API>): Promise<void> {
+  async function onCall({ id, methodName, args, type }: RpcCall<API>): Promise<void> {
     if (type !== "call" || typeof methodName !== "string") {
       return;
     }
@@ -19,7 +19,7 @@ export function rpcResponder<API>({ api, dispatchResponse }: ResponderOptions<AP
         id,
         methodName,
         error: `${methodName} is not a function. typeof returned ${typeof method}`,
-      } as ResponseProtocol<API>);
+      } as RpcResponse<API>);
     } else {
       try {
         const returnValue: unknown = await method.apply(api, args);
@@ -28,19 +28,19 @@ export function rpcResponder<API>({ api, dispatchResponse }: ResponderOptions<AP
           id,
           methodName,
           returnValue,
-        } as ResponseProtocol<API>);
+        } as RpcResponse<API>);
       } catch (error) {
         dispatchResponse({
           type: "response",
           id,
           methodName,
           error,
-        } as ResponseProtocol<API>);
+        } as RpcResponse<API>);
       }
     }
   }
 
   return {
-    onCall: onCall as (call: CallProtocol<API>) => void,
+    onCall: onCall as (call: RpcCall<API>) => void,
   };
 }

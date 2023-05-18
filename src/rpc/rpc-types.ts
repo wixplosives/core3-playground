@@ -4,11 +4,11 @@ export type Promisified<T> = {
   [K in keyof T as T[K] extends AnyFn ? K : never]: T[K] extends AnyFn ? PromisifyFn<T[K]> : never;
 };
 
-export type CallProtocol<T> = {
+export type RpcCall<T> = {
   [K in keyof T]: T[K] extends AnyFn ? MethodCall<K, Parameters<T[K]>> : never;
 }[keyof T];
 
-export type ResponseProtocol<T> = {
+export type RpcResponse<T> = {
   [K in keyof T]: T[K] extends AnyFn ? MethodResponse<K, ReturnType<T[K]>> : never;
 }[keyof T];
 

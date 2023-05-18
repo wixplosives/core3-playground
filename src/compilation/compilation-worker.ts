@@ -2,7 +2,7 @@
 import { evaluateSassLib, evaluateTypescriptLib } from "./compilation-libs";
 import { log } from "../log";
 import { rpcResponder } from "../rpc/rpc-responder";
-import type { CallProtocol } from "../rpc/rpc-types";
+import type { RpcCall } from "../rpc/rpc-types";
 
 const wixUnpkgURL = new URL("https://static.parastorage.com/unpkg/");
 
@@ -17,7 +17,7 @@ const { onCall } = rpcResponder<Compilation>({
   dispatchResponse: (response) => globalThis.postMessage(response),
 });
 
-globalThis.addEventListener("message", (event) => onCall(event.data as CallProtocol<Compilation>));
+globalThis.addEventListener("message", (event) => onCall(event.data as RpcCall<Compilation>));
 
 export interface LibraryVersions {
   /** typescript version to use for compilation */

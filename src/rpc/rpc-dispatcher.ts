@@ -1,8 +1,8 @@
-import type { CallProtocol, AnyFn, ResponseProtocol, Promisified } from "./rpc-types";
+import type { RpcCall, AnyFn, RpcResponse, Promisified } from "./rpc-types";
 
 export interface DispatcherOptions<API> {
   /** Dispatcher will call this fn when there a new call to pass to a responder */
-  dispatchCall(call: CallProtocol<API>): void;
+  dispatchCall(call: RpcCall<API>): void;
 
   /** Dispatcher will call this fn when there's a new call to pass to a responder */
   signal?: AbortSignal;
@@ -13,7 +13,7 @@ export function rpcDispatcher<API extends object>({ dispatchCall, signal }: Disp
   const callbacks = new Map<number, ReturnType<typeof deferred>>();
   let nextCallbackId = 0;
 
-  function onResponse({ id, returnValue, error }: ResponseProtocol<API>): void {
+  function onResponse({ id, returnValue, error }: RpcResponse<API>): void {
     const callback = callbacks.get(id);
     if (!callback) {
       return;
@@ -47,7 +47,7 @@ export function rpcDispatcher<API extends object>({ dispatchCall, signal }: Disp
           type: "call",
           methodName,
           args,
-        } as CallProtocol<API>);
+        } as RpcCall<API>);
         return callback.promise;
       };
       methods.set(methodName, method);

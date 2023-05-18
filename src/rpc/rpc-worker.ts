@@ -1,5 +1,5 @@
 import { rpcDispatcher } from "./rpc-dispatcher";
-import type { Promisified, ResponseProtocol } from "./rpc-types";
+import type { Promisified, RpcResponse } from "./rpc-types";
 
 export interface RPCWorker<T extends object> {
   api: Promisified<T>;
@@ -15,7 +15,7 @@ export function createRPCWorker<T extends object>(workerURL: URL, workerName: st
     signal: abortController.signal,
   });
 
-  worker.addEventListener("message", (ev) => onResponse(ev.data as ResponseProtocol<T>), {
+  worker.addEventListener("message", (ev) => onResponse(ev.data as RpcResponse<T>), {
     signal: abortController.signal,
   });
 
