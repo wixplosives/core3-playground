@@ -46,18 +46,45 @@ async function initialize(versions: LibraryVersions) {
   log(sass.info);
 }
 
+const sourceMapURLPrefix = `//# sourceMappingURL=`;
+const filePathSourceMapPrefix = `project://`;
+
 function compile(filePath: string, fileContents: string) {
   if (ts === undefined) {
     throw new Error(`typescript was not yet initialized`);
   }
-  const { outputText } = ts.transpileModule(fileContents, {
+  const { outputText, sourceMapText } = ts.transpileModule(fileContents, {
     compilerOptions: {
-      module: ts.ModuleKind.ESNext,
+      module: ts.ModuleKind.CommonJS,
       jsx: ts.JsxEmit.ReactJSXDev,
+      sourceMap: true,
+      inlineSources: true,
     },
     fileName: filePath,
   });
+
+  if (sourceMapText) {
+    const parsedSourceMap = JSON.parse(sourceMapText) as SourceMapLike;
+    overrideSourceMapFilePath(parsedSourceMap, filePathSourceMapPrefix + filePath);
+    return inlineSourceMap(parsedSourceMap, outputText);
+  }
   return outputText;
+}
+
+function inlineSourceMap(sourceMap: SourceMapLike, outputText: string) {
+  const sourceMappingURLIdx = outputText.lastIndexOf(sourceMapURLPrefix);
+  if (sourceMappingURLIdx !== -1) {
+    const base64SourceMapUri = createBase64DataURI(JSON.stringify(sourceMap));
+    return outputText.slice(0, sourceMappingURLIdx + sourceMapURLPrefix.length) + base64SourceMapUri;
+  }
+  return outputText;
+}
+
+function overrideSourceMapFilePath(sourceMap: SourceMapLike, filePath: string) {
+  const { sources } = sourceMap;
+  if (Array.isArray(sources) && sources.length === 1 && typeof sources[0] === "string") {
+    sources[0] = filePath;
+  }
 }
 
 function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
@@ -70,4 +97,12 @@ async function fetchText(targetURL: URL): Promise<string> {
     throw new Error(`"HTTP ${response.status}: ${response.statusText}" while fetching ${targetURL.href}`);
   }
   return response.text();
+}
+
+function createBase64DataURI(value: string, mimeType = `application/json`) {
+  return `data:${mimeType};base64,${btoa(value)}`;
+}
+
+interface SourceMapLike {
+  sources?: [string];
 }
