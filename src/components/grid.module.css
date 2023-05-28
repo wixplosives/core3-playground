@@ -15,7 +15,7 @@
   grid-template-areas:
     "header header header r-div right"
     "t-div t-div t-div r-div right"
-    "left l-div main r-div right"
+    "main l-div panel r-div right"
     "b-div b-div b-div b-div b-div"
     "footer footer footer footer footer";
   grid-template-columns:
@@ -44,13 +44,13 @@
   padding: 0.6em;
 }
 
-.main {
-  grid-area: main;
+.panel {
+  grid-area: panel;
 }
 
-.left {
+.main {
   background: var(--dark-background);
-  grid-area: left;
+  grid-area: main;
   display: flex;
   flex-direction: column;
   position: relative;

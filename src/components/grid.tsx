@@ -4,12 +4,12 @@ import styles from "./grid.module.css";
 export interface GridProps {
   header?: React.ReactNode;
   left?: React.ReactNode;
-  main?: React.ReactNode;
+  panel?: React.ReactNode;
   right?: React.ReactNode;
   footer?: React.ReactNode;
 }
 
-export const Grid: React.FC<GridProps> = ({ header, left, main, right, footer }) => {
+export const Grid: React.FC<GridProps> = ({ header, left, panel, right, footer }) => {
   const root = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => new GridResizeManager(root.current!).setSizes().bindEvents(), []);
@@ -18,9 +18,9 @@ export const Grid: React.FC<GridProps> = ({ header, left, main, right, footer })
     <div className={styles["grid"]} ref={root}>
       <header className={styles["header"]}>{header}</header>
       <div className={styles["divider"]} />
-      <aside className={styles["left"]}>{left}</aside>
+      <main className={styles["main"]}>{left}</main>
       <div className={styles["divider"]} />
-      <main className={styles["main"]}>{main}</main>
+      <aside className={styles["panel"]}>{panel}</aside>
       <aside className={styles["right"]}>{right}</aside>
       <div className={styles["divider"]} />
       <footer className={styles["footer"]}>{footer}</footer>

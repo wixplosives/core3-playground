@@ -41,7 +41,7 @@ export const Editor: React.FC = () => {
     <Grid
       header={<Header />}
       left={<Tabs />}
-      main={<FileExplorer items={items} onDirectoryOpened={onDirectoryOpened} onItemClick={onItemClick} />}
+      panel={<FileExplorer items={items} onDirectoryOpened={onDirectoryOpened} onItemClick={onItemClick} />}
       right={<Sidebar />}
       footer={<StatusBar />}
     />
