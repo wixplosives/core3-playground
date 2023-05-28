@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-console
-export const log = (message: string) => console.log(message);
+export const log = (message: unknown) => console.log(message);
 // eslint-disable-next-line no-console
-export const logError = (message: string) => console.error(message);
+export const logError = (message: unknown) => console.error(message);
 
 export function errorToString(error: unknown): string {
   if (isErrorLike(error)) {

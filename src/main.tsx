@@ -2,7 +2,6 @@ import { createRoot } from "react-dom/client";
 import { Editor } from "./components/editor";
 import { createRPCWorker } from "./rpc/rpc-worker";
 import type { Compilation } from "./compilation/compilation-worker";
-// import "./monaco-main";
 import "./variables.css";
 import "./main.css";
 
@@ -17,8 +16,6 @@ await compilationWorker.api.initialize({
   sass: "1.62.1",
   immutable: "4.3.0",
 });
-
-// log(await compilationWorker.api.compile("/a.tsx", `export const a = <div />;`));
 
 globalThis.compilation = compilationWorker;
 

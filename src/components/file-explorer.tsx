@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { FileTree } from "./file-tree";
-import { Tree } from "./tree";
+import classes from "./file-explorer.module.css";
 
 export interface FileTreeProps {
-  roots?: FileTree.ItemType[] | undefined;
-  onOpenLocal?(): void;
+  items?: FileTree.Item[] | undefined;
+  onDirectoryOpened?(directoryHandle: FileSystemDirectoryHandle): void;
+  onItemClick?(itemId: string): void;
 }
 
-export const FileExplorer: React.FC<FileTreeProps> = ({ roots, onOpenLocal }) => {
-  return roots ? (
-    <Tree<FileTree.ItemType> roots={roots} ItemComp={FileTree.Item} />
-  ) : (
-    <button onClick={onOpenLocal}>Open Local</button>
+export const FileExplorer: React.FC<FileTreeProps> = ({ items, onDirectoryOpened, onItemClick }) => {
+  const onOpenLocal = useCallback(() => {
+    window
+      .showDirectoryPicker()
+      .then((directoryHandle) => onDirectoryOpened?.(directoryHandle))
+      .catch(() => undefined);
+  }, [onDirectoryOpened]);
+
+  return (
+    <>
+      {items && <FileTree className={classes["fileTree"]} items={items} onItemClick={onItemClick} />}
+      {!!window.showDirectoryPicker && <button onClick={onOpenLocal}>Open Local</button>}
+    </>
   );
 };

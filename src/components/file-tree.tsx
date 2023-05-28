@@ -1,68 +1,43 @@
-import React from "react";
-import type { Tree } from "./tree";
-import { directoryNameToIcon, fileNameToIcon } from "../icons/path-to-icon";
+import React, { useCallback } from "react";
 import classes from "./file-tree.module.css";
 
 export namespace FileTree {
-  export type ItemType = FileItem | DirectoryItem;
-
-  export interface FileItem extends BaseItem {
-    type: "file";
+  export interface Props extends React.HTMLAttributes<HTMLDivElement> {
+    items: Item[];
+    onItemClick?(itemId: string): void;
   }
 
-  export interface DirectoryItem extends BaseItem {
-    type: "directory";
-    children: ItemType[];
-  }
-
-  export interface BaseItem extends Tree.Item {
-    type: string;
-    name: string;
-    path: string;
-    iconUrl?: string;
+  export interface Item {
+    id: string;
+    label: string;
+    depth: number;
+    iconUrl: string;
   }
 }
 
-const flipBoolean = (value = false) => !value;
+export const FileTree = React.memo<FileTree.Props>(function FileTree({ items, onItemClick, ...rootProps }) {
+  const onClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
+      if (event.target instanceof HTMLElement && event.target.dataset["id"]) {
+        onItemClick?.(event.target.dataset["id"]);
+      }
+    },
+    [onItemClick]
+  );
 
-export namespace FileTree {
-  export const Item = React.memo(function FileTreeItem({ item, depth }: Tree.ItemProps<ItemType>) {
-    const [open, toggleOpen] = React.useReducer(flipBoolean, true);
-    if (item.type === "directory") {
-      const childDepth = depth + 1;
-      return (
-        <>
-          <div
-            className={classes["root"]}
-            style={{ [`--depth`]: depth } as React.CSSProperties}
-            key={item.path}
-            onClick={toggleOpen}
-          >
-            <img
-              src={item.iconUrl || directoryNameToIcon(item.name)}
-              className={classes["icon"]}
-              style={{ width: "1.2em", height: "1.2em" }}
-            />
-            {item.name}
-          </div>
-          {open
-            ? item.children.map((childItem) => <Item depth={childDepth} key={childItem.path} item={childItem} />)
-            : null}
-        </>
-      );
-    } else if (item.type === "file") {
-      return (
-        <div className={classes["root"]} key={item.path} style={{ [`--depth`]: depth } as React.CSSProperties}>
-          <img
-            src={item.iconUrl || fileNameToIcon(item.name)}
-            className={classes["icon"]}
-            style={{ width: "1.2em", height: "1.2em" }}
-          />
-          {item.name}
+  return (
+    <div {...rootProps} onClick={onClick}>
+      {items.map((item) => (
+        <div
+          className={classes["item"]}
+          style={{ [`--depth`]: item.depth } as React.CSSProperties}
+          key={item.id}
+          data-id={item.id}
+        >
+          {<img src={item.iconUrl} className={classes["icon"]} style={{ width: "1.2em", height: "1.2em" }} />}
+          {item.label}
         </div>
-      );
-    } else {
-      return null;
-    }
-  });
-}
+      ))}
+    </div>
+  );
+});
