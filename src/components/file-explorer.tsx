@@ -19,7 +19,9 @@ export const FileExplorer: React.FC<FileTreeProps> = ({ items, onDirectoryOpened
   return (
     <>
       {items && <FileTree className={classes["fileTree"]} items={items} onItemClick={onItemClick} />}
-      {!!window.showDirectoryPicker && <button onClick={onOpenLocal}>Open Local</button>}
+      <button disabled={!window.showDirectoryPicker} onClick={onOpenLocal}>
+        Open Local
+      </button>
     </>
   );
 };
