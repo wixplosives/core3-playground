@@ -1,6 +1,7 @@
 import defaultFile from "./vscode-icons/default_file.svg";
 import defaultFolder from "./vscode-icons/default_folder.svg";
 import fileTypeCss from "./vscode-icons/file_type_css.svg";
+import fileTypeCssMap from "./vscode-icons/file_type_cssmap.svg";
 import fileTypeEslint from "./vscode-icons/file_type_eslint.svg";
 import fileTypeGit from "./vscode-icons/file_type_git.svg";
 import fileTypeHtml from "./vscode-icons/file_type_html.svg";
@@ -8,6 +9,7 @@ import fileTypeJs from "./vscode-icons/file_type_js.svg";
 import fileTypeJsMap from "./vscode-icons/file_type_jsmap.svg";
 import fileTypeJson from "./vscode-icons/file_type_json.svg";
 import fileTypeLicense from "./vscode-icons/file_type_license.svg";
+import fileTypeMap from "./vscode-icons/file_type_map.svg";
 import fileTypeMarkdown from "./vscode-icons/file_type_markdown.svg";
 import fileTypeNode from "./vscode-icons/file_type_node.svg";
 import fileTypeNpm from "./vscode-icons/file_type_npm.svg";
@@ -19,6 +21,7 @@ import fileTypeTsconfig from "./vscode-icons/file_type_tsconfig.svg";
 import fileTypeTypescript from "./vscode-icons/file_type_typescript.svg";
 import fileTypeTypescriptdef from "./vscode-icons/file_type_typescriptdef.svg";
 import fileTypeWebpack from "./vscode-icons/file_type_webpack.svg";
+import fileTypeYarn from "./vscode-icons/file_type_yarn.svg";
 import folderTypeComponent from "./vscode-icons/folder_type_component.svg";
 import folderTypeDist from "./vscode-icons/folder_type_dist.svg";
 import folderTypeHook from "./vscode-icons/folder_type_hook.svg";
@@ -46,13 +49,15 @@ export function fileNameToIcon(fileName: string): string {
     return fileTypeEslint;
   } else if (fileName.startsWith(".prettierrc") || fileName === ".prettierignore") {
     return fileTypePrettier;
+  } else if (fileName.startsWith("yarn.lock") || fileName === ".yarnrc") {
+    return fileTypeYarn;
   } else if (fileName === "LICENSE" || fileName === "LICENSE.md") {
     return fileTypeLicense;
   } else if (gitNames.has(fileName)) {
     return fileTypeGit;
   } else if (fileName.endsWith(".js")) {
     return fileTypeJs;
-  } else if (fileName.endsWith(".json")) {
+  } else if (fileName.endsWith(".json") || fileName.endsWith(".tsbuildinfo")) {
     return fileTypeJson;
   } else if (fileName.endsWith(".css")) {
     return fileTypeCss;
@@ -62,8 +67,14 @@ export function fileNameToIcon(fileName: string): string {
     return fileTypeMarkdown;
   } else if (fileName.endsWith(".html")) {
     return fileTypeHtml;
-  } else if (fileName.endsWith(".js.map")) {
-    return fileTypeJsMap;
+  } else if (fileName.endsWith(".map")) {
+    if (fileName.endsWith(".js.map")) {
+      return fileTypeJsMap;
+    } else if (fileName.endsWith(".css.map")) {
+      return fileTypeCssMap;
+    } else {
+      return fileTypeMap;
+    }
   }
   return defaultFile;
 }
