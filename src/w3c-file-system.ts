@@ -33,6 +33,9 @@ export async function* readDirectoryDeep(
   for await (const childHandle of readDirectoryHandle(directoryHandle)) {
     const childPath = path.join(directoryPath, childHandle.name);
     const isDirectory = childHandle.kind === "directory";
+    if (isDirectory && childHandle.name === ".git") {
+      continue;
+    }
     yield {
       id: childPath,
       depth,
@@ -53,18 +56,30 @@ export async function collectIntoArray<T>(asyncIter: AsyncIterable<T>): Promise<
   return collected;
 }
 
-export async function getDeepFileHandle(
-  rootDirectoryHandle: FileSystemDirectoryHandle,
-  pathToFile: string[]
-): Promise<FileSystemFileHandle> {
-  let currentDirectoryHandle = rootDirectoryHandle;
-  for (const [idx, pathName] of pathToFile.entries()) {
-    const isLast = idx === pathName.length - 1;
-    if (isLast) {
-      return await currentDirectoryHandle.getFileHandle(pathName);
-    } else {
-      currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(pathName);
-    }
+export async function ignoreRejections<T>(promise: Promise<T>): Promise<T | undefined> {
+  try {
+    return await promise;
+  } catch {
+    return undefined;
   }
-  throw new Error(`cannot retrieve file handle for ${pathToFile.join("/")}`);
 }
+
+// export async function getDeepFileHandle(
+//   rootDirectoryHandle: FileSystemDirectoryHandle,
+//   pathToFile: string[]
+// ): Promise<FileSystemFileHandle | undefined> {
+//   let currentDirectoryHandle = rootDirectoryHandle;
+//   const lastIdx = pathToFile.length - 1;
+//   for (const [idx, pathName] of pathToFile.entries()) {
+//     try {
+//       if (idx === lastIdx) {
+//         return await currentDirectoryHandle.getFileHandle(pathName);
+//       } else {
+//         currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(pathName);
+//       }
+//     } catch {
+//       return undefined;
+//     }
+//   }
+//   return undefined;
+// }
