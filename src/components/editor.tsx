@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React from "react";
 import { StatusBar } from "./status-bar";
 import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
@@ -6,44 +6,21 @@ import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { Tabs } from "./tabs";
 import type { FileTree } from "./file-tree";
-import { collectIntoArray, readDirectoryDeep } from "../w3c-file-system";
 
-export const Editor: React.FC = () => {
-  const [rootHandle, setRootHandle] = useState<FileSystemDirectoryHandle>();
-  const [items, setItems] = useState<FileTree.Item[]>();
-  const openDirectories = useRef(new Set<string>());
+export interface EditorProps {
+  onOpenLocal?(): unknown;
+  onFileTreeItemClick?(itemId: string): unknown;
+  fileTreeItems?: FileTree.Item[] | undefined;
+}
 
-  const onDirectoryOpened = useCallback((directoryHandle: FileSystemDirectoryHandle) => {
-    setRootHandle(directoryHandle);
-    openDirectories.current.clear();
-    void collectIntoArray(readDirectoryDeep(directoryHandle, "/", openDirectories.current)).then((newItems) => {
-      setItems(newItems);
-    });
-  }, []);
-
-  const onItemClick = useCallback(
-    (itemId: string): void => {
-      if (openDirectories.current.has(itemId)) {
-        openDirectories.current.delete(itemId);
-      } else {
-        openDirectories.current.add(itemId);
-      }
-      if (rootHandle) {
-        void collectIntoArray(readDirectoryDeep(rootHandle, "/", openDirectories.current)).then((newItems) => {
-          setItems(newItems);
-        });
-      }
-    },
-    [rootHandle]
-  );
-
+export const Editor = React.memo<EditorProps>(function Editor({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) {
   return (
     <Grid
       header={<Header />}
       left={<Tabs />}
-      panel={<FileExplorer items={items} onDirectoryOpened={onDirectoryOpened} onItemClick={onItemClick} />}
+      panel={<FileExplorer items={fileTreeItems} onOpenLocal={onOpenLocal} onItemClick={onFileTreeItemClick} />}
       right={<Sidebar />}
       footer={<StatusBar />}
     />
   );
-};
+});
