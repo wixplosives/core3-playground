@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import classes from "./file-tree.module.css";
 
 export namespace FileTree {
@@ -16,14 +16,11 @@ export namespace FileTree {
 }
 
 export const FileTree = React.memo<FileTree.Props>(function FileTree({ items, onItemClick, ...rootProps }) {
-  const onClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-      if (event.target instanceof HTMLElement && event.target.dataset["id"]) {
-        onItemClick?.(event.target.dataset["id"]);
-      }
-    },
-    [onItemClick]
-  );
+  const onClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
+    if (event.target instanceof HTMLElement && event.target.dataset["id"]) {
+      onItemClick?.(event.target.dataset["id"]);
+    }
+  };
 
   return (
     <div {...rootProps} onClick={onClick}>
