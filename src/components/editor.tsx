@@ -13,14 +13,14 @@ export interface EditorProps {
   fileTreeItems?: FileTree.Item[] | undefined;
 }
 
-export const Editor = React.memo<EditorProps>(function Editor({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) {
-  return (
-    <Grid
-      header={<Header />}
-      left={<Tabs />}
-      panel={<FileExplorer items={fileTreeItems} onOpenLocal={onOpenLocal} onItemClick={onFileTreeItemClick} />}
-      right={<Sidebar />}
-      footer={<StatusBar />}
-    />
-  );
-});
+export const Editor = React.memo<EditorProps>(({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) => (
+  <Grid
+    header={<Header />}
+    left={<Tabs />}
+    panel={<FileExplorer items={fileTreeItems} onOpenLocal={onOpenLocal} onItemClick={onFileTreeItemClick} />}
+    right={<Sidebar />}
+    footer={<StatusBar />}
+  />
+));
+
+Editor.displayName = "Editor";
