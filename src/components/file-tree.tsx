@@ -4,7 +4,7 @@ import classes from "./file-tree.module.css";
 export namespace FileTree {
   export interface Props extends React.HTMLAttributes<HTMLDivElement> {
     items: Item[];
-    onItemClick?(itemId: string): void;
+    onItemClick?: ((itemId: string) => void) | undefined;
   }
 
   export interface Item {

@@ -8,7 +8,7 @@ import type { FileTree } from "./components/file-tree";
 const compilationWorkerName = "Compilation";
 const compilationBundleName = "compilation-worker.js";
 const defaultLibVersions: LibraryVersions = {
-  typescript: "5.0.4",
+  typescript: "5.1.3",
   sass: "1.62.1",
   immutable: "4.3.0",
 };
@@ -70,6 +70,9 @@ export class PlaygroundApp {
     const packageLockHandle = await ignoreRejections(rootDirectoryHandle.getFileHandle("package-lock.json"));
     const libVersions = packageLockHandle ? await this.getLibVersions(packageLockHandle) : defaultLibVersions;
     await compilationWorker.api.initialize(libVersions);
+    // const contents = await compilationWorker.api.compile("/a.ts", `export const a = 123;\nthrow new Error('wow');`);
+    // console.log(contents);
+    // (0, eval)(`(function (exports){${contents}\n})({})`);
   }
 
   private async getLibVersions(packageLockHandle: FileSystemFileHandle): Promise<LibraryVersions> {

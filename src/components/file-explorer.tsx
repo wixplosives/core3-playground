@@ -4,8 +4,8 @@ import classes from "./file-explorer.module.css";
 
 export interface FileTreeProps {
   items?: FileTree.Item[] | undefined;
-  onOpenLocal?(): unknown;
-  onItemClick?(itemId: string): unknown;
+  onOpenLocal?: (() => unknown) | undefined;
+  onItemClick?: ((itemId: string) => unknown) | undefined;
 }
 
 export const FileExplorer: React.FC<FileTreeProps> = ({ items, onOpenLocal, onItemClick }) => {
