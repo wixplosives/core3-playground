@@ -4,7 +4,7 @@ export interface DispatcherOptions<API> {
   /** Dispatcher will call this fn when there a new call to pass to a responder */
   dispatchCall(call: RpcCall<API>): void;
 
-  /** Dispatcher will call this fn when there's a new call to pass to a responder */
+  /** Once aborted, dispatcher caches will be cleared, and new calls will to api will throw */
   signal?: AbortSignal;
 }
 
