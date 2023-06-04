@@ -7,29 +7,17 @@
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
 
-
 .grid {
+  --border-size: 0.15em;
   color: var(--text-color);
-  --x-divider: 3px;
-  display: grid;
-  grid-template-areas:
-    "header header header r-div right"
-    "t-div t-div t-div r-div right"
-    "main l-div panel r-div right"
-    "b-div b-div b-div b-div b-div"
-    "footer footer footer footer footer";
-  grid-template-columns:
-    var(--x-left, 1fr)
-    var(--x-divider)
-    minmax(0, 20%)
-    var(--x-divider)
-    var(--x-right, 3%);
-  grid-template-rows:
-    auto
-    var(--x-divider)
-    minmax(0, 1fr) var(--x-divider)
-    var(--x-bottom, 3%);
   height: 100%;
+  display: grid;
+  background-color: red;
+  grid-template-columns: 1fr calc(var(--border-size) * 1.5) 20em 4em;
+  grid-template-rows: 1fr 2em;
+  grid-template-areas:
+    "content divider panel sidebar"
+    "status status status status";
 }
 
 .grid > * {
@@ -37,89 +25,38 @@
   overflow: auto;
 }
 
-.header {
-  grid-area: header;
-  display: flex;
-  position: relative;
-  padding: 0.6em;
+.content {
+  grid-area: content;
+  background: var(--dark-background);
 }
 
 .panel {
   grid-area: panel;
+  background: var(--darker-background);
 }
 
-.main {
-  background: var(--dark-background);
-  grid-area: main;
+.sidebar {
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
-  position: relative;
+  background: var(--darker-background);
+  border-left: var(--border-size) solid var(--indented-list-item-hover);
+  padding-top: 0.5em;
 }
 
-.right {
-  grid-area: right;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.footer {
-  grid-area: footer;
-  display: flex;
-  position: relative;
+.status {
+  grid-area: status;
+  background: var(--darker-background);
+  border-top: var(--border-size) solid var(--indented-list-item-hover);
 }
 
 .divider {
-  background: var(--dark-background);
+  grid-area: divider;
+  background: var(--indented-list-item-hover);
+  cursor: ew-resize;
 }
 
 .divider:hover,
 .divider:active {
   background: var(--divider-hover);
-}
-
-.grid:active .divider:not(:active) {
-  background: var(--dark-background);
-}
-
-:empty + .divider {
-  display: none;
-}
-
-.header + .divider {
-  grid-area: t-div;
-  cursor: ns-resize;
-}
-
-.footer + .divider {
-  grid-area: b-div;
-  cursor: ns-resize;
-}
-
-.left + .divider {
-  grid-area: l-div;
-  cursor: ew-resize;
-}
-
-.right + .divider {
-  grid-area: r-div;
-  cursor: ew-resize;
-}
-
-::-webkit-scrollbar {
-  width: 0.4em;
-  height: 0.4em;
-}
-
-::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 0.2em;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.5);
 }
