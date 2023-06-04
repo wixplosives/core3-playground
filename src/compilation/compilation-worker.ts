@@ -1,11 +1,10 @@
-import { evaluateSassLib, evaluateTypescriptLib } from "./compilation-libs";
+import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./compilation-libs";
 import { log } from "../log";
 import { rpcResponder } from "../rpc/rpc-responder";
 import type { RpcCall } from "../rpc/rpc-types";
+import { compileUsingTypescript } from "../compilers/typescript-compiler";
 
 const wixUnpkgURL = new URL("https://static.parastorage.com/unpkg/");
-const sourceMapURLPrefix = `//# sourceMappingURL=`;
-const filePathSourceMapPrefix = `project://`;
 
 export interface Compilation {
   /** Initialize compilation environment's typescript and sass */
@@ -41,7 +40,7 @@ async function initialize(versions: LibraryVersions): Promise<void> {
     fetchText(typescriptURL),
   ]);
 
-  ts = evaluateTypescriptLib(typescriptURL.href, typescriptLibText);
+  ts = evaluateTypescriptLib(typescriptURL.href, fixTypescriptBundle(typescriptLibText));
   const sass = evaluateSassLib(sassURL.href, sassLibText, immutableLibText, immutableURL.href);
   log(ts.version);
   log(sass.info);
@@ -51,45 +50,14 @@ function compile(filePath: string, fileContents: string): string {
   if (ts === undefined) {
     throw new Error(`typescript was not yet initialized`);
   }
+  const compilerOptions: import("typescript").CompilerOptions = {
+    module: ts.ModuleKind.CommonJS,
+    jsx: ts.JsxEmit.ReactJSXDev,
+    sourceMap: true,
+    inlineSources: true,
+  };
 
-  const { outputText, sourceMapText } = ts.transpileModule(fileContents, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      jsx: ts.JsxEmit.ReactJSXDev,
-      sourceMap: true,
-      inlineSources: true,
-    },
-    fileName: filePath,
-  });
-
-  if (sourceMapText) {
-    const originalSourceMap = JSON.parse(sourceMapText) as SourceMapLike;
-    const sourceFilePath = filePathSourceMapPrefix + filePath;
-    const fixedSourceMap = hasSingleOrigin(originalSourceMap)
-      ? overrideSourceMapFilePath(originalSourceMap, sourceFilePath)
-      : originalSourceMap;
-    return inlineSourceMap(fixedSourceMap, outputText);
-  }
-  return outputText;
-}
-
-function inlineSourceMap(sourceMap: SourceMapLike, outputText: string): string {
-  const sourceMappingURLIdx = outputText.lastIndexOf(sourceMapURLPrefix);
-  if (sourceMappingURLIdx !== -1) {
-    const base64SourceMapUri = createBase64DataURI(JSON.stringify(sourceMap));
-    return outputText.slice(0, sourceMappingURLIdx + sourceMapURLPrefix.length) + base64SourceMapUri;
-  }
-  return outputText;
-}
-
-function overrideSourceMapFilePath(sourceMap: SourceMapLike, filePath: string): SourceMapLike {
-  const sourceMapCopy: SourceMapLike = { ...sourceMap };
-  sourceMapCopy.sources = [filePath];
-  return sourceMapCopy;
-}
-
-function hasSingleOrigin({ sources }: SourceMapLike) {
-  return Array.isArray(sources) && sources.length === 1 && typeof sources[0] === "string";
+  return compileUsingTypescript(ts, filePath, fileContents, compilerOptions);
 }
 
 function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
@@ -102,12 +70,4 @@ async function fetchText(targetURL: URL): Promise<string> {
     throw new Error(`"HTTP ${response.status}: ${response.statusText}" while fetching ${targetURL.href}`);
   }
   return response.text();
-}
-
-function createBase64DataURI(value: string, mimeType = `application/json`): string {
-  return `data:${mimeType};base64,${btoa(value)}`;
-}
-
-interface SourceMapLike {
-  sources?: [string];
 }

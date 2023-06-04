@@ -35,18 +35,19 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
 }
 
 export function evaluateTypescriptLib(typescriptURL: string, typescriptText: string) {
-  typescriptText = typescriptText
+  const typescriptModuleSystem = singlePackageModuleSystem("typescript", typescriptURL, typescriptText);
+  const typescriptLib = typescriptModuleSystem.requireModule(typescriptURL) as typeof import("typescript");
+  return typescriptLib;
+}
+
+export const fixTypescriptBundle = (typescriptBundleText: string) =>
+  typescriptBundleText
     // remove broken typescript sourcemap
     .replace(`\n//# sourceMappingURL=typescript.js.map`, ``)
     // disable code causing caught exception
     .replace(`const etwModulePath =`, `// const etwModulePath =`)
     .replace(`var etwModulePath =`, `// var etwModulePath =`)
     .replace(`require(etwModulePath);`, `void 0`);
-
-  const typescriptModuleSystem = singlePackageModuleSystem("typescript", typescriptURL, typescriptText);
-  const typescriptLib = typescriptModuleSystem.requireModule(typescriptURL) as typeof import("typescript");
-  return typescriptLib;
-}
 
 function singlePackageModuleSystem(packageName: string, packageURL: string, packageLibText: string) {
   return createBaseCjsModuleSystem({
