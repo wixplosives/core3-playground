@@ -1,14 +1,16 @@
-import type React from "react";
-import { IndentedList, type IndentedListItem, type IndentedListProps } from "./indented-list";
+import React from "react";
+import { IndentedList } from "./indented-list";
 import classes from "./file-explorer.module.css";
 
-export interface FileExplorerProps {
-  items?: IndentedListItem[] | undefined;
-  onOpenLocal?: (() => unknown) | undefined;
-  onItemClick?: IndentedListProps["onItemClick"];
+export namespace FileExplorer {
+  export interface Props {
+    items?: IndentedList.Item[] | undefined;
+    onItemClick?: IndentedList.Props["onItemClick"];
+    onOpenLocal?: (() => unknown) | undefined;
+  }
 }
 
-export const FileExplorer: React.FC<FileExplorerProps> = ({ items, onOpenLocal, onItemClick }) => {
+export const FileExplorer: React.FC<FileExplorer.Props> = React.memo(({ items, onOpenLocal, onItemClick }) => {
   return (
     <>
       {items && <IndentedList className={classes["fileTree"]} items={items} onItemClick={onItemClick} />}
@@ -17,4 +19,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ items, onOpenLocal, 
       </button>
     </>
   );
-};
+});
+
+FileExplorer.displayName = "FileExplorer";

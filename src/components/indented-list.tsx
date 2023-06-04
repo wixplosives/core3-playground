@@ -1,20 +1,22 @@
 import React from "react";
 import classes from "./indented-list.module.css";
 
-export interface IndentedListProps extends React.HTMLAttributes<HTMLDivElement> {
-  items: IndentedListItem[];
-  onItemClick?: ((itemId: string, itemType: string) => unknown) | undefined;
+export namespace IndentedList {
+  export interface Props extends React.HTMLAttributes<HTMLDivElement> {
+    items: Item[];
+    onItemClick?: ((itemId: string, itemType: string) => unknown) | undefined;
+  }
+
+  export interface Item {
+    id: string;
+    label: string;
+    depth: number;
+    iconUrl: string;
+    type: string;
+  }
 }
 
-export interface IndentedListItem {
-  id: string;
-  label: string;
-  depth: number;
-  iconUrl: string;
-  type: string;
-}
-
-export const IndentedList = React.memo<IndentedListProps>(({ items, onItemClick, ...rootProps }) => {
+export const IndentedList = React.memo<IndentedList.Props>(({ items, onItemClick, ...rootProps }) => {
   const onClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
     if (event.target instanceof HTMLElement && event.target.dataset["id"] && event.target.dataset["type"]) {
       onItemClick?.(event.target.dataset["id"], event.target.dataset["type"]);

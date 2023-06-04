@@ -1,18 +1,20 @@
 import React from "react";
 import { StatusBar } from "./status-bar";
-import { FileExplorer, type FileExplorerProps } from "./file-explorer";
+import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { Tabs } from "./tabs";
 
-export interface EditorProps {
-  onOpenLocal?: FileExplorerProps["onOpenLocal"];
-  onFileTreeItemClick?: FileExplorerProps["onItemClick"];
-  fileTreeItems?: FileExplorerProps["items"];
+export namespace Editor {
+  export interface Props {
+    onOpenLocal?: FileExplorer.Props["onOpenLocal"];
+    onFileTreeItemClick?: FileExplorer.Props["onItemClick"];
+    fileTreeItems?: FileExplorer.Props["items"];
+  }
 }
 
-export const Editor = React.memo<EditorProps>(({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) => (
+export const Editor = React.memo<Editor.Props>(({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) => (
   <Grid
     header={<Header />}
     left={<Tabs />}

@@ -3,7 +3,7 @@ import { type Compilation, type LibraryVersions } from "./compilation/compilatio
 import { Editor } from "./components/editor";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 import { collectIntoArray, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
-import type { IndentedListItem } from "./components/indented-list";
+import type { IndentedList } from "./components/indented-list";
 
 const compilationWorkerName = "Compilation";
 const compilationBundleName = "compilation-worker.js";
@@ -18,7 +18,7 @@ export class PlaygroundApp {
   private openFiles = new Set<string>();
   private appRoot: Root | undefined;
   private rootDirectoryHandle: FileSystemDirectoryHandle | undefined;
-  private fileTreeItems: IndentedListItem[] | undefined;
+  private fileTreeItems: IndentedList.Item[] | undefined;
 
   public showUI(container: HTMLElement) {
     this.appRoot = createRoot(container);

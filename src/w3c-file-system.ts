@@ -1,5 +1,5 @@
 import path from "@file-services/path";
-import type { IndentedListItem } from "./components/indented-list";
+import type { IndentedList } from "./components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "./icons/path-to-icon";
 
 const sortHandlesByName = (a: FileSystemHandle, b: FileSystemHandle) => (a.name >= b.name ? 1 : -1);
@@ -29,7 +29,7 @@ export async function* readDirectoryDeep(
   directoryPath: string,
   openedDirectories: Set<string>,
   depth = 0
-): AsyncGenerator<IndentedListItem> {
+): AsyncGenerator<IndentedList.Item> {
   for await (const childHandle of readDirectoryHandle(directoryHandle)) {
     const childPath = path.join(directoryPath, childHandle.name);
     const isDirectory = childHandle.kind === "directory";

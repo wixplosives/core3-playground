@@ -1,9 +1,5 @@
 import React from "react";
 
-export interface SidebarProps {
-  icons?: string[];
-}
-
-export const Sidebar: React.FC<SidebarProps> = () => {
+export const Sidebar: React.FC = () => {
   return <>Sidebar</>;
 };

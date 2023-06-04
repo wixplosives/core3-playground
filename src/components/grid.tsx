@@ -1,15 +1,17 @@
 import React, { useLayoutEffect, useRef } from "react";
 import styles from "./grid.module.css";
 
-export interface GridProps {
-  header?: React.ReactNode;
-  left?: React.ReactNode;
-  panel?: React.ReactNode;
-  right?: React.ReactNode;
-  footer?: React.ReactNode;
+export namespace Grid {
+  export interface Props {
+    header?: React.ReactNode;
+    left?: React.ReactNode;
+    panel?: React.ReactNode;
+    right?: React.ReactNode;
+    footer?: React.ReactNode;
+  }
 }
 
-export const Grid: React.FC<GridProps> = ({ header, left, panel, right, footer }) => {
+export const Grid: React.FC<Grid.Props> = ({ header, left, panel, right, footer }) => {
   const root = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => new GridResizeManager(root.current!).setSizes().bindEvents(), []);
