@@ -6,9 +6,12 @@ export interface RPCWorker<T extends object> {
   close(): void;
 }
 
-export function createRPCWorker<T extends object>(workerURL: URL, workerName: string): RPCWorker<T> {
+export function createRPCWorker<T extends object>(
+  workerURL: URL,
+  workerOptions?: WorkerOptions | undefined
+): RPCWorker<T> {
   const listenerController = new AbortController();
-  const worker = new Worker(workerURL, { name: workerName, type: "module" });
+  const worker = new Worker(workerURL, workerOptions);
 
   const { api, onResponse } = rpcDispatcher<T>({
     dispatchCall: (call) => worker.postMessage(call),

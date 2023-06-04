@@ -72,7 +72,10 @@ export class PlaygroundApp {
   private async initializeProject(rootDirectoryHandle: FileSystemDirectoryHandle) {
     globalThis.compilation?.close();
     const compilationWorkerURL = new URL(compilationBundleName, import.meta.url);
-    const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, compilationWorkerName);
+    const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, {
+      name: compilationWorkerName,
+      type: "module",
+    });
     globalThis.compilation = compilationWorker;
 
     const packageLockHandle = await ignoreRejections(rootDirectoryHandle.getFileHandle("package-lock.json"));
