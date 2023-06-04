@@ -3,7 +3,7 @@ import classes from "./indented-list.module.css";
 
 export interface IndentedListProps extends React.HTMLAttributes<HTMLDivElement> {
   items: IndentedListItem[];
-  onItemClick?: ((itemId: string, itemType: string) => void) | undefined;
+  onItemClick?: ((itemId: string, itemType: string) => unknown) | undefined;
 }
 
 export interface IndentedListItem {
