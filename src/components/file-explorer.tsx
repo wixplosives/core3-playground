@@ -1,17 +1,17 @@
 import type React from "react";
-import { FileTree } from "./file-tree";
+import { IndentedList, type IndentedListItem, type IndentedListProps } from "./indented-list";
 import classes from "./file-explorer.module.css";
 
-export interface FileTreeProps {
-  items?: FileTree.Item[] | undefined;
+export interface FileExplorerProps {
+  items?: IndentedListItem[] | undefined;
   onOpenLocal?: (() => unknown) | undefined;
-  onItemClick?: ((itemId: string) => unknown) | undefined;
+  onItemClick?: IndentedListProps["onItemClick"];
 }
 
-export const FileExplorer: React.FC<FileTreeProps> = ({ items, onOpenLocal, onItemClick }) => {
+export const FileExplorer: React.FC<FileExplorerProps> = ({ items, onOpenLocal, onItemClick }) => {
   return (
     <>
-      {items && <FileTree className={classes["fileTree"]} items={items} onItemClick={onItemClick} />}
+      {items && <IndentedList className={classes["fileTree"]} items={items} onItemClick={onItemClick} />}
       <button disabled={!window.showDirectoryPicker} onClick={onOpenLocal}>
         Open Local
       </button>

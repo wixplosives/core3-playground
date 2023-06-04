@@ -1,5 +1,5 @@
 import path from "@file-services/path";
-import type { FileTree } from "./components/file-tree";
+import type { IndentedListItem } from "./components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "./icons/path-to-icon";
 
 const sortHandlesByName = (a: FileSystemHandle, b: FileSystemHandle) => (a.name >= b.name ? 1 : -1);
@@ -29,7 +29,7 @@ export async function* readDirectoryDeep(
   directoryPath: string,
   openedDirectories: Set<string>,
   depth = 0
-): AsyncGenerator<FileTree.Item> {
+): AsyncGenerator<IndentedListItem> {
   for await (const childHandle of readDirectoryHandle(directoryHandle)) {
     const childPath = path.join(directoryPath, childHandle.name);
     const isDirectory = childHandle.kind === "directory";
@@ -41,6 +41,7 @@ export async function* readDirectoryDeep(
       depth,
       label: childHandle.name,
       iconUrl: isDirectory ? directoryNameToIcon(childHandle.name) : fileNameToIcon(childHandle.name),
+      type: childHandle.kind,
     };
     if (isDirectory && openedDirectories.has(childPath)) {
       yield* readDirectoryDeep(childHandle, childPath, openedDirectories, depth + 1);

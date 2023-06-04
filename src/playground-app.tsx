@@ -3,7 +3,7 @@ import { type Compilation, type LibraryVersions } from "./compilation/compilatio
 import { Editor } from "./components/editor";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 import { collectIntoArray, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
-import type { FileTree } from "./components/file-tree";
+import type { IndentedListItem } from "./components/indented-list";
 
 const compilationWorkerName = "Compilation";
 const compilationBundleName = "compilation-worker.js";
@@ -15,24 +15,32 @@ const defaultLibVersions: LibraryVersions = {
 
 export class PlaygroundApp {
   private openDirectories = new Set<string>();
+  private openFiles = new Set<string>();
   private appRoot: Root | undefined;
   private rootDirectoryHandle: FileSystemDirectoryHandle | undefined;
-  private fileTreeItems: FileTree.Item[] | undefined;
+  private fileTreeItems: IndentedListItem[] | undefined;
 
   public showUI(container: HTMLElement) {
     this.appRoot = createRoot(container);
     this.renderApp();
   }
 
-  private onFileTreeItemClick = async (itemId: string) => {
-    if (this.openDirectories.has(itemId)) {
-      this.openDirectories.delete(itemId);
-    } else {
-      this.openDirectories.add(itemId);
-    }
-    if (this.rootDirectoryHandle) {
-      await this.calculateFileTreeItems(this.rootDirectoryHandle);
-      this.renderApp();
+  private onFileTreeItemClick = async (itemId: string, itemType: string) => {
+    if (itemType === "directory") {
+      if (this.openDirectories.has(itemId)) {
+        this.openDirectories.delete(itemId);
+      } else {
+        this.openDirectories.add(itemId);
+      }
+      if (this.rootDirectoryHandle) {
+        await this.calculateFileTreeItems(this.rootDirectoryHandle);
+        this.renderApp();
+      }
+    } else if (itemType === "file") {
+      if (!this.openFiles.has(itemId)) {
+        this.openFiles.add(itemId);
+        this.renderApp();
+      }
     }
   };
 

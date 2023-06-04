@@ -1,16 +1,15 @@
 import React from "react";
 import { StatusBar } from "./status-bar";
-import { FileExplorer } from "./file-explorer";
+import { FileExplorer, type FileExplorerProps } from "./file-explorer";
 import { Grid } from "./grid";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { Tabs } from "./tabs";
-import type { FileTree } from "./file-tree";
 
 export interface EditorProps {
-  onOpenLocal?(): unknown;
-  onFileTreeItemClick?(itemId: string): unknown;
-  fileTreeItems?: FileTree.Item[] | undefined;
+  onOpenLocal?: FileExplorerProps["onOpenLocal"];
+  onFileTreeItemClick?: FileExplorerProps["onItemClick"];
+  fileTreeItems?: FileExplorerProps["items"];
 }
 
 export const Editor = React.memo<EditorProps>(({ onOpenLocal, onFileTreeItemClick, fileTreeItems }) => (

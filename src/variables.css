@@ -6,5 +6,5 @@
   --darker-background: rgb(24, 24, 24);
   --accent-color: #8895f2;
   --divider-hover: var(--accent-color);
-  --file-tree-item-hover: rgb(70, 70, 70);
+  --indented-list-item-hover: rgb(70, 70, 70);
 }
