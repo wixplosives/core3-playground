@@ -1,7 +1,10 @@
 import type { RpcCall, RpcResponse } from "./rpc-types";
 
 export interface ResponderOptions<API> {
+  /** actual implementation for the api */
   api: API;
+
+  /** Responder will call this fn when there a new response to pass to a dispatcher */
   dispatchResponse(response: RpcResponse<API>): void;
 }
 
