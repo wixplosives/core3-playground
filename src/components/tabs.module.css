@@ -1,19 +1,22 @@
 .tabs {
   display: flex;
+  overflow: auto;
+  /* use reset? */
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .tab {
-  display: inline-block;
-  height: 2.5em;
   padding: 0.5em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
   border: 1px solid var(--indented-list-item-hover);
-  min-width: 12em;
-  max-width: 18em;
-  flex: 0 1;
+  min-width: 8em;
+  max-width: 16em;
+  flex: 0 1 100%;
 }
 
 .selected {
