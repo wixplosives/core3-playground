@@ -27,6 +27,19 @@ export class PlaygroundApp {
     this.renderApp();
   }
 
+  private renderApp() {
+    this.appRoot?.render(
+      <Editor
+        openFiles={this.openFiles}
+        selectedFileIdx={this.selectedFileIdx}
+        onTabClick={this.onTabClick}
+        onOpenLocal={this.onOpenLocal}
+        onFileTreeItemClick={this.onFileTreeItemClick}
+        fileTreeItems={this.fileTreeItems}
+      />
+    );
+  }
+
   private onFileTreeItemClick = async (itemId: string, itemType: string) => {
     if (itemType === "directory") {
       if (this.openDirectories.has(itemId)) {
@@ -72,19 +85,6 @@ export class PlaygroundApp {
       await this.initializeProject(directoryHandle);
     }
   };
-
-  private renderApp() {
-    this.appRoot?.render(
-      <Editor
-        openFiles={this.openFiles}
-        selectedFileIdx={this.selectedFileIdx}
-        onTabClick={this.onTabClick}
-        onOpenLocal={this.onOpenLocal}
-        onFileTreeItemClick={this.onFileTreeItemClick}
-        fileTreeItems={this.fileTreeItems}
-      />
-    );
-  }
 
   private async calculateFileTreeItems(directoryHandle: FileSystemDirectoryHandle) {
     this.fileTreeItems = await collectIntoArray(readDirectoryDeep(directoryHandle, "/", this.openDirectories));
