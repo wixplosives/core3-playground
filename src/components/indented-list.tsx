@@ -17,8 +17,12 @@ export namespace IndentedList {
 }
 
 export const IndentedList = React.memo<IndentedList.Props>(({ items, onItemClick, ...rootProps }) => {
-  const onClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-    if (event.target instanceof HTMLElement && event.target.dataset["id"] && event.target.dataset["type"]) {
+  const onClick: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    if (
+      event.target instanceof HTMLElement &&
+      typeof event.target.dataset["id"] === "string" &&
+      typeof event.target.dataset["type"] === "string"
+    ) {
       onItemClick?.(event.target.dataset["id"], event.target.dataset["type"]);
     }
   };

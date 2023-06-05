@@ -65,22 +65,22 @@ export async function ignoreRejections<T>(promise: Promise<T>): Promise<T | unde
   }
 }
 
-// export async function getDeepFileHandle(
-//   rootDirectoryHandle: FileSystemDirectoryHandle,
-//   pathToFile: string[]
-// ): Promise<FileSystemFileHandle | undefined> {
-//   let currentDirectoryHandle = rootDirectoryHandle;
-//   const lastIdx = pathToFile.length - 1;
-//   for (const [idx, pathName] of pathToFile.entries()) {
-//     try {
-//       if (idx === lastIdx) {
-//         return await currentDirectoryHandle.getFileHandle(pathName);
-//       } else {
-//         currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(pathName);
-//       }
-//     } catch {
-//       return undefined;
-//     }
-//   }
-//   return undefined;
-// }
+export async function getDeepFileHandle(
+  rootDirectoryHandle: FileSystemDirectoryHandle,
+  pathToFile: string[]
+): Promise<FileSystemFileHandle | undefined> {
+  let currentDirectoryHandle = rootDirectoryHandle;
+  const lastIdx = pathToFile.length - 1;
+  for (const [idx, pathName] of pathToFile.entries()) {
+    try {
+      if (idx === lastIdx) {
+        return await currentDirectoryHandle.getFileHandle(pathName);
+      } else {
+        currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(pathName);
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}

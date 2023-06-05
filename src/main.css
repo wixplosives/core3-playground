@@ -11,25 +11,8 @@ body,
   box-sizing: border-box;
 }
 
-::-webkit-scrollbar {
-  width: 0.4em;
-  height: 0.4em;
-}
-
-::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 0.2em;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
 :root {
   background-color: var(--darker-background);
   font-family: var(--primary-font-family);
+  color-scheme: dark;
 }

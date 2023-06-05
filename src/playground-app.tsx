@@ -2,7 +2,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { type Compilation, type LibraryVersions } from "./compilation/compilation-worker";
 import { Editor } from "./components/editor";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
-import { collectIntoArray, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
+import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
 import type { IndentedList } from "./components/indented-list";
 
 const compilationWorkerName = "Compilation";
@@ -15,7 +15,9 @@ const defaultLibVersions: LibraryVersions = {
 
 export class PlaygroundApp {
   private openDirectories = new Set<string>();
-  private openFiles = new Set<string>();
+  private openFiles: Editor.OpenFile[] = [];
+  private selectedFileIdx = -1;
+
   private appRoot: Root | undefined;
   private rootDirectoryHandle: FileSystemDirectoryHandle | undefined;
   private fileTreeItems: IndentedList.Item[] | undefined;
@@ -34,14 +36,30 @@ export class PlaygroundApp {
       }
       if (this.rootDirectoryHandle) {
         await this.calculateFileTreeItems(this.rootDirectoryHandle);
-        this.renderApp();
       }
     } else if (itemType === "file") {
-      if (!this.openFiles.has(itemId)) {
-        this.openFiles.add(itemId);
-        this.renderApp();
+      const itemIdx = this.openFiles.findIndex(({ filePath }) => itemId === filePath);
+      if (itemIdx === -1) {
+        const pathToFile = getPathToFile(itemId);
+        if (this.rootDirectoryHandle) {
+          const fileHandle = await getDeepFileHandle(this.rootDirectoryHandle, pathToFile);
+          if (fileHandle) {
+            const file = await fileHandle.getFile();
+            const fileContents = await file.text();
+            this.openFiles = [...this.openFiles, { filePath: itemId, fileContents }];
+            this.selectedFileIdx = this.openFiles.length - 1;
+          }
+        }
+      } else {
+        this.selectedFileIdx = itemIdx;
       }
     }
+    this.renderApp();
+  };
+
+  private onTabClick = (tabId: string) => {
+    this.selectedFileIdx = this.openFiles.findIndex(({ filePath }) => tabId === filePath);
+    this.renderApp();
   };
 
   private onOpenLocal = async () => {
@@ -58,6 +76,9 @@ export class PlaygroundApp {
   private renderApp() {
     this.appRoot?.render(
       <Editor
+        openFiles={this.openFiles}
+        selectedFileIdx={this.selectedFileIdx}
+        onTabClick={this.onTabClick}
         onOpenLocal={this.onOpenLocal}
         onFileTreeItemClick={this.onFileTreeItemClick}
         fileTreeItems={this.fileTreeItems}
@@ -107,4 +128,10 @@ declare namespace globalThis {
 
 interface PackageLock {
   packages?: Record<string, { version?: string }>;
+}
+
+function getPathToFile(itemId: string): string[] {
+  const pathToFile = itemId.split("/");
+  pathToFile.shift();
+  return pathToFile;
 }
