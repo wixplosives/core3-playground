@@ -1,5 +1,6 @@
 import React from "react";
 import classes from "./tabs.module.css";
+import cssUtils from "./utils.module.css";
 
 export namespace Tabs {
   export interface Props {
@@ -22,18 +23,18 @@ export const Tabs: React.FC<Tabs.Props> = React.memo(({ tabs, selectedTabIdx, on
     }
   };
   return (
-    <header className={classes["tabs"]} onClick={onClick}>
+    <ul className={`${classes["tabs"]!} ${cssUtils["hideScrollbar"]!}`} onClick={onClick}>
       {tabs?.map(({ title, id, tooltip }, idx) => (
-        <span
+        <li
           key={id}
           title={tooltip}
           className={selectedTabIdx === idx ? `${classes["tab"]!} ${classes["selected"]!}` : classes["tab"]}
           data-id={id}
         >
           {title}
-        </span>
+        </li>
       ))}
-    </header>
+    </ul>
   );
 });
 
