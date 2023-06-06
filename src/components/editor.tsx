@@ -1,12 +1,19 @@
-import React, { useMemo } from "react";
+import React, { Suspense, useMemo } from "react";
 import path from "@file-services/path";
 import { StatusBar } from "./status-bar";
 import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
 import { Sidebar } from "./sidebar";
 import { Tabs } from "./tabs";
-import { CodeEditor } from "./code-editor";
 import classes from "./editor.module.css";
+
+const monacoJsBundle = "vendors/monaco.js";
+const monacoCssBundle = "vendors/monaco.css";
+
+const CodeEditor = React.lazy(async () => {
+  await Promise.all([loadScript(monacoJsBundle), loadStylesheet(monacoCssBundle)]);
+  return await import("./code-editor");
+});
 
 export namespace Editor {
   export interface Props {
@@ -56,11 +63,13 @@ export const Editor = React.memo<Editor.Props>(
           <>
             <Tabs tabs={tabs} selectedTabIdx={selectedFileIdx} onTabClick={onTabClick} onTabClose={onTabClose} />
             {openFile && (
-              <CodeEditor
-                className={classes["codeEditor"]}
-                value={openFile.fileContents}
-                filePath={openFile.filePath}
-              />
+              <Suspense fallback={"Loading..."}>
+                <CodeEditor
+                  className={classes["codeEditor"]}
+                  value={openFile.fileContents}
+                  filePath={openFile.filePath}
+                />
+              </Suspense>
             )}
           </>
         }
@@ -82,3 +91,30 @@ export const Editor = React.memo<Editor.Props>(
 );
 
 Editor.displayName = "Editor";
+
+const loadScript = async (targetUrl: string) => {
+  const existingScriptEl = document.querySelector(`script[src="${targetUrl}"]`);
+  if (existingScriptEl) {
+    return;
+  }
+  const scriptElement = document.body.appendChild(document.createElement("script"));
+  await loadWithTrigger(scriptElement, "src", targetUrl);
+};
+
+const loadStylesheet = async (targetUrl: string) => {
+  const existingLinkEl = document.querySelector(`link[href="${targetUrl}"]`);
+  if (existingLinkEl) {
+    return;
+  }
+  const linkEl = document.head.appendChild(document.createElement("link"));
+  linkEl.rel = "stylesheet";
+  await loadWithTrigger(linkEl, "href", targetUrl);
+};
+
+function loadWithTrigger<T extends HTMLElement, K extends keyof T>(element: T, key: K, value: T[K]) {
+  return new Promise<unknown>((res, rej) => {
+    element.addEventListener("load", res, { once: true });
+    element.addEventListener("error", rej, { once: true });
+    element[key] = value;
+  });
+}

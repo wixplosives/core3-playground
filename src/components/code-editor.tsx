@@ -51,3 +51,5 @@ declare namespace globalThis {
   let MonacoEnvironment: Environment | undefined;
   let trustedTypes: Window["trustedTypes"];
 }
+
+export default CodeEditor;
