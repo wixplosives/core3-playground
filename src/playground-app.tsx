@@ -1,3 +1,4 @@
+import { del, get, update } from "idb-keyval";
 import { createRoot, type Root } from "react-dom/client";
 import { type Compilation, type LibraryVersions } from "./compilation/compilation-worker";
 import { Editor } from "./components/editor";
@@ -5,6 +6,7 @@ import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
 import type { IndentedList } from "./components/indented-list";
 
+const openProjectsIDBKey = "playground-projects";
 const compilationWorkerName = "Compilation";
 const compilationBundleName = "compilation-worker.js";
 const defaultLibVersions: LibraryVersions = {
@@ -14,17 +16,26 @@ const defaultLibVersions: LibraryVersions = {
 };
 
 export class PlaygroundApp {
+  private appRoot: Root | undefined;
+  private rootDirectoryHandle?: FileSystemDirectoryHandle | undefined;
   private openDirectories = new Set<string>();
+  private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
+
+  // passed to UI
   private openFiles: Editor.OpenFile[] = [];
   private selectedFileIdx = -1;
-
-  private appRoot: Root | undefined;
-  private rootDirectoryHandle: FileSystemDirectoryHandle | undefined;
   private fileTreeItems: IndentedList.Item[] | undefined;
+  private savedProjectNames?: string[] | undefined;
 
   public showUI(container: HTMLElement) {
     this.appRoot = createRoot(container);
     this.renderApp();
+  }
+
+  public async loadSavedProjects() {
+    const savedDirectoryHandles = await get<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey);
+    this.savedDirectoryHandles = savedDirectoryHandles;
+    this.savedProjectNames = savedDirectoryHandles && Object.keys(savedDirectoryHandles);
   }
 
   private renderApp() {
@@ -32,10 +43,13 @@ export class PlaygroundApp {
       <Editor
         openFiles={this.openFiles}
         selectedFileIdx={this.selectedFileIdx}
+        fileTreeItems={this.fileTreeItems}
+        savedProjectNames={this.savedProjectNames}
         onTabClick={this.onTabClick}
         onOpenLocal={this.onOpenLocal}
         onFileTreeItemClick={this.onFileTreeItemClick}
-        fileTreeItems={this.fileTreeItems}
+        onOpenSaved={this.onOpenSaved}
+        onClearSaved={this.onClearSaved}
       />
     );
   }
@@ -47,9 +61,7 @@ export class PlaygroundApp {
       } else {
         this.openDirectories.add(itemId);
       }
-      if (this.rootDirectoryHandle) {
-        await this.calculateFileTreeItems(this.rootDirectoryHandle);
-      }
+      await this.calculateFileTreeItems();
     } else if (itemType === "file") {
       const itemIdx = this.openFiles.findIndex(({ filePath }) => itemId === filePath);
       if (itemIdx === -1) {
@@ -75,19 +87,57 @@ export class PlaygroundApp {
     this.renderApp();
   };
 
+  private async setRootDirectoryHandle(directoryHandle: FileSystemDirectoryHandle) {
+    if (this.rootDirectoryHandle !== directoryHandle) {
+      this.rootDirectoryHandle = directoryHandle;
+      this.openFiles = [];
+      await this.calculateFileTreeItems();
+    }
+  }
+
   private onOpenLocal = async () => {
     const directoryHandle = await ignoreRejections(window.showDirectoryPicker());
     if (directoryHandle) {
-      this.openDirectories.clear();
-      this.rootDirectoryHandle = directoryHandle;
-      await this.calculateFileTreeItems(directoryHandle);
+      await this.setRootDirectoryHandle(directoryHandle);
+      await update<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey, (savedProjects = {}) => {
+        savedProjects[directoryHandle.name] = directoryHandle;
+        return savedProjects;
+      });
+      await this.loadSavedProjects();
       this.renderApp();
       await this.initializeProject(directoryHandle);
     }
   };
 
-  private async calculateFileTreeItems(directoryHandle: FileSystemDirectoryHandle) {
-    this.fileTreeItems = await collectIntoArray(readDirectoryDeep(directoryHandle, "/", this.openDirectories));
+  private onOpenSaved = async (projectName: string) => {
+    const savedDirectoryHandle = this.savedDirectoryHandles?.[projectName];
+    if (!savedDirectoryHandle) {
+      return;
+    }
+    if (!(await this.handleHasPermission(savedDirectoryHandle))) {
+      return;
+    }
+    await this.setRootDirectoryHandle(savedDirectoryHandle);
+    this.renderApp();
+  };
+
+  private async handleHasPermission(fileSystemHandle: FileSystemHandle) {
+    if ((await fileSystemHandle.queryPermission()) === "granted") {
+      return true;
+    }
+    return (await fileSystemHandle.requestPermission()) === "granted";
+  }
+
+  private onClearSaved = async () => {
+    await del(openProjectsIDBKey);
+    await this.loadSavedProjects();
+    this.renderApp();
+  };
+
+  private async calculateFileTreeItems() {
+    this.fileTreeItems = this.rootDirectoryHandle
+      ? await collectIntoArray(readDirectoryDeep(this.rootDirectoryHandle, "/", this.openDirectories))
+      : undefined;
   }
 
   private async initializeProject(rootDirectoryHandle: FileSystemDirectoryHandle) {

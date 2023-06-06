@@ -14,6 +14,9 @@ export namespace Editor {
     onOpenLocal?: FileExplorer.Props["onOpenLocal"];
     onFileTreeItemClick?: FileExplorer.Props["onItemClick"];
     fileTreeItems?: FileExplorer.Props["items"];
+    savedProjectNames?: string[] | undefined;
+    onOpenSaved?: ((projectName: string) => unknown) | undefined;
+    onClearSaved?: (() => unknown) | undefined;
   }
 
   export interface OpenFile {
@@ -23,7 +26,17 @@ export namespace Editor {
 }
 
 export const Editor = React.memo<Editor.Props>(
-  ({ onOpenLocal, onFileTreeItemClick, fileTreeItems, openFiles, selectedFileIdx, onTabClick }) => {
+  ({
+    onOpenLocal,
+    onFileTreeItemClick,
+    fileTreeItems,
+    openFiles,
+    selectedFileIdx,
+    onTabClick,
+    savedProjectNames,
+    onOpenSaved,
+    onClearSaved,
+  }) => {
     const tabs = useMemo(
       () =>
         openFiles?.map(
@@ -41,7 +54,16 @@ export const Editor = React.memo<Editor.Props>(
             <pre>{openFile?.fileContents}</pre>
           </>
         }
-        panel={<FileExplorer items={fileTreeItems} onOpenLocal={onOpenLocal} onItemClick={onFileTreeItemClick} />}
+        panel={
+          <FileExplorer
+            items={fileTreeItems}
+            onOpenLocal={onOpenLocal}
+            onItemClick={onFileTreeItemClick}
+            savedProjectNames={savedProjectNames}
+            onOpenSaved={onOpenSaved}
+            onClearSaved={onClearSaved}
+          />
+        }
         sidebar={<Sidebar />}
         status={<StatusBar />}
       />

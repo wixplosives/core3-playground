@@ -15,6 +15,7 @@
     "@file-services/commonjs": "^7.3.0",
     "@file-services/path": "^7.3.0",
     "buffer": "^6.0.3",
+    "idb-keyval": "^6.2.1",
     "isomorphic-git": "^1.24.0",
     "monaco-editor-core": "^0.38.0",
     "monaco-languages": "^2.11.1",
