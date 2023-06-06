@@ -50,6 +50,7 @@ export class PlaygroundApp {
         onFileTreeItemClick={this.onFileTreeItemClick}
         onOpenSaved={this.onOpenSaved}
         onClearSaved={this.onClearSaved}
+        onTabClose={this.onTabClose}
       />
     );
   }
@@ -84,6 +85,21 @@ export class PlaygroundApp {
 
   private onTabClick = (tabId: string) => {
     this.selectedFileIdx = this.openFiles.findIndex(({ filePath }) => tabId === filePath);
+    this.renderApp();
+  };
+
+  private onTabClose = (tabId: string) => {
+    const { openFiles } = this;
+    const targetFileIdx = openFiles.findIndex(({ filePath }) => tabId === filePath);
+    if (targetFileIdx === -1) {
+      return;
+    }
+    this.openFiles = [...openFiles.slice(0, targetFileIdx), ...openFiles.slice(targetFileIdx + 1)];
+    if (targetFileIdx === this.selectedFileIdx) {
+      this.selectedFileIdx = this.openFiles.length ? clamp(targetFileIdx, 0, this.openFiles.length - 1) : -1;
+    } else if (this.selectedFileIdx > targetFileIdx) {
+      this.selectedFileIdx--;
+    }
     this.renderApp();
   };
 
@@ -185,3 +201,5 @@ function getPathToFile(itemId: string): string[] {
   pathToFile.shift();
   return pathToFile;
 }
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(min, value), max);

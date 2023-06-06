@@ -7,6 +7,7 @@ export namespace Tabs {
     tabs?: Tab[] | undefined;
     selectedTabIdx?: number | undefined;
     onTabClick?: ((tabId: string) => unknown) | undefined;
+    onTabClose?: ((tabId: string) => unknown) | undefined;
   }
 
   export interface Tab {
@@ -16,14 +17,19 @@ export namespace Tabs {
   }
 }
 
-export const Tabs: React.FC<Tabs.Props> = React.memo(({ tabs, selectedTabIdx, onTabClick }) => {
+export const Tabs: React.FC<Tabs.Props> = React.memo(({ tabs, selectedTabIdx, onTabClick, onTabClose }) => {
   const onClick: React.MouseEventHandler<HTMLElement> = (event) => {
     if (event.target instanceof HTMLElement && typeof event.target.dataset["id"] === "string") {
       onTabClick?.(event.target.dataset["id"]);
     }
   };
+  const onAuxClick: React.MouseEventHandler<HTMLElement> = (event) => {
+    if (event.button === 1 && event.target instanceof HTMLElement && typeof event.target.dataset["id"] === "string") {
+      onTabClose?.(event.target.dataset["id"]);
+    }
+  };
   return (
-    <ul className={`${classes["tabs"]!} ${cssUtils["hideScrollbar"]!}`} onClick={onClick}>
+    <ul className={`${classes["tabs"]!} ${cssUtils["hideScrollbar"]!}`} onClick={onClick} onAuxClick={onAuxClick}>
       {tabs?.map(({ title, id, tooltip }, idx) => (
         <li
           key={id}

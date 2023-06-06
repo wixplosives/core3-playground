@@ -13,12 +13,13 @@ export namespace Editor {
     openFiles?: OpenFile[] | undefined;
     selectedFileIdx?: number | undefined;
     onTabClick?: Tabs.Props["onTabClick"];
+    onTabClose?: Tabs.Props["onTabClose"];
     onOpenLocal?: FileExplorer.Props["onOpenLocal"];
     onFileTreeItemClick?: FileExplorer.Props["onItemClick"];
     fileTreeItems?: FileExplorer.Props["items"];
-    savedProjectNames?: string[] | undefined;
-    onOpenSaved?: ((projectName: string) => unknown) | undefined;
-    onClearSaved?: (() => unknown) | undefined;
+    savedProjectNames?: FileExplorer.Props["savedProjectNames"];
+    onOpenSaved?: FileExplorer.Props["onOpenSaved"];
+    onClearSaved?: FileExplorer.Props["onClearSaved"];
   }
 
   export interface OpenFile {
@@ -38,6 +39,7 @@ export const Editor = React.memo<Editor.Props>(
     savedProjectNames,
     onOpenSaved,
     onClearSaved,
+    onTabClose,
   }) => {
     const tabs = useMemo(
       () =>
@@ -52,7 +54,7 @@ export const Editor = React.memo<Editor.Props>(
       <Grid
         content={
           <>
-            <Tabs tabs={tabs} selectedTabIdx={selectedFileIdx} onTabClick={onTabClick} />
+            <Tabs tabs={tabs} selectedTabIdx={selectedFileIdx} onTabClick={onTabClick} onTabClose={onTabClose} />
             {openFile && (
               <CodeEditor
                 className={classes["codeEditor"]}
