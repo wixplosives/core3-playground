@@ -13,7 +13,10 @@ export function rpcDispatcher<API extends object>({ dispatchCall, signal }: Disp
   const callbacks = new Map<number, ReturnType<typeof deferred>>();
   let nextCallbackId = 0;
 
-  function onResponse({ id, returnValue, error }: RpcResponse<API>): void {
+  function onResponse({ type, id, returnValue, error }: RpcResponse<API>): void {
+    if (type !== "response") {
+      return;
+    }
     const callback = callbacks.get(id);
     if (!callback) {
       return;
