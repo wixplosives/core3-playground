@@ -27,6 +27,8 @@
 
 .content {
   grid-area: content;
+  display: flex;
+  flex-direction: column;
   background: var(--dark-background);
 }
 

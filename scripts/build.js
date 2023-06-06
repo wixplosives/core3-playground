@@ -37,7 +37,7 @@ const buildOptions = {
   plugins: [
     cssModulesPlugin({ v2: true, v2CssModulesOption: { pattern: "[hash]-[local]" } }),
     globalExternals({
-      "monaco-editor-core": { varName: "monaco", namedExports: ["editor"] },
+      "monaco-editor-core": { varName: "monaco", namedExports: ["editor", "languages"] },
       // "isomorphic-git": { varName: "isomorphicGit.git" },
       // "isomorphic-git/http/web": { varName: "isomorphicGit.httpClient" },
     }),

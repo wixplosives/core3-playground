@@ -5,6 +5,8 @@ import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
 import { Sidebar } from "./sidebar";
 import { Tabs } from "./tabs";
+import { CodeEditor } from "./code-editor";
+import classes from "./editor.module.css";
 
 export namespace Editor {
   export interface Props {
@@ -51,7 +53,13 @@ export const Editor = React.memo<Editor.Props>(
         content={
           <>
             <Tabs tabs={tabs} selectedTabIdx={selectedFileIdx} onTabClick={onTabClick} />
-            <pre>{openFile?.fileContents}</pre>
+            {openFile && (
+              <CodeEditor
+                className={classes["codeEditor"]}
+                value={openFile.fileContents}
+                filePath={openFile.filePath}
+              />
+            )}
           </>
         }
         panel={
