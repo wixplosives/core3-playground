@@ -36,6 +36,8 @@ CodeEditor.displayName = "CodeEditor";
 
 globalThis.MonacoEnvironment = {
   getWorker: () => new Worker(new URL(monacoWorkerBundleLocation, import.meta.url), { name: "Monaco Generic Worker" }),
+  createTrustedTypesPolicy: globalThis.trustedTypes
+    ?.createPolicy as import("monaco-editor-core").Environment["createTrustedTypesPolicy"],
 };
 
 const extensionToLanguage = new Map<string, string>();
@@ -49,4 +51,5 @@ for (const { id, extensions } of languages.getLanguages()) {
 
 declare namespace globalThis {
   let MonacoEnvironment: import("monaco-editor-core").Environment | undefined;
+  let trustedTypes: Window["trustedTypes"];
 }
