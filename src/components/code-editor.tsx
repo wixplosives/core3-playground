@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { editor, Uri } from "monaco-editor-core";
+import { editor, Uri, type Environment } from "monaco-editor-core";
 
 const monacoWorkerURL = new URL("vendors/monaco-worker.js", import.meta.url);
 const monacoJsonWorkerURL = new URL("vendors/monaco-json-worker.js", import.meta.url);
@@ -44,11 +44,10 @@ globalThis.MonacoEnvironment = {
       return new Worker(monacoWorkerURL, { name: "Monaco Generic Worker" });
     }
   },
-  createTrustedTypesPolicy: globalThis.trustedTypes
-    ?.createPolicy as import("monaco-editor-core").Environment["createTrustedTypesPolicy"],
+  createTrustedTypesPolicy: globalThis.trustedTypes?.createPolicy as Environment["createTrustedTypesPolicy"],
 };
 
 declare namespace globalThis {
-  let MonacoEnvironment: import("monaco-editor-core").Environment | undefined;
+  let MonacoEnvironment: Environment | undefined;
   let trustedTypes: Window["trustedTypes"];
 }
