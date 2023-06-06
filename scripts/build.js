@@ -22,7 +22,6 @@ const buildOptions = {
   entryPoints: ["src/main.tsx", "src/compilation/compilation-worker.ts"],
   entryNames: "[name]",
   loader: {
-    ".ts": "tsx",
     ".json": "json",
     ".png": "file",
     ".jpeg": "file",
