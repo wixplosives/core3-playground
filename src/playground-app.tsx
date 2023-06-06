@@ -1,10 +1,11 @@
 import { del, get, update } from "idb-keyval";
+import React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { type Compilation, type LibraryVersions } from "./compilation/compilation-worker";
 import { Editor } from "./components/editor";
+import type { IndentedList } from "./components/indented-list";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
-import type { IndentedList } from "./components/indented-list";
 
 const openProjectsIDBKey = "playground-projects";
 const compilationWorkerName = "Compilation";
@@ -40,18 +41,20 @@ export class PlaygroundApp {
 
   private renderApp() {
     this.appRoot?.render(
-      <Editor
-        openFiles={this.openFiles}
-        selectedFileIdx={this.selectedFileIdx}
-        fileTreeItems={this.fileTreeItems}
-        savedProjectNames={this.savedProjectNames}
-        onTabClick={this.onTabClick}
-        onOpenLocal={this.onOpenLocal}
-        onFileTreeItemClick={this.onFileTreeItemClick}
-        onOpenSaved={this.onOpenSaved}
-        onClearSaved={this.onClearSaved}
-        onTabClose={this.onTabClose}
-      />
+      <React.StrictMode>
+        <Editor
+          openFiles={this.openFiles}
+          selectedFileIdx={this.selectedFileIdx}
+          fileTreeItems={this.fileTreeItems}
+          savedProjectNames={this.savedProjectNames}
+          onTabClick={this.onTabClick}
+          onOpenLocal={this.onOpenLocal}
+          onFileTreeItemClick={this.onFileTreeItemClick}
+          onOpenSaved={this.onOpenSaved}
+          onClearSaved={this.onClearSaved}
+          onTabClose={this.onTabClose}
+        />
+      </React.StrictMode>
     );
   }
 
