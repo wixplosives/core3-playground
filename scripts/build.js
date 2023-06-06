@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { build, context } from "esbuild";
 import cssModulesPlugin from "esbuild-css-modules-plugin";
 import { globalExternals } from "@fal-works/esbuild-plugin-global-externals";
-import open from "open";
+import open, { apps } from "open";
 
 const port = 8000;
 const isWatch = process.argv.includes("--watch") || process.argv.includes("-w");
@@ -65,7 +65,7 @@ if (isWatch) {
   const buildContext = await context(buildOptions);
   await buildContext.serve({ servedir: "dist", port });
   await buildContext.watch();
-  await open(`http://localhost:${port}`);
+  await open(`http://localhost:${port}`, { app: { name: apps.chrome } });
 } else {
   await build(buildOptions);
 }
