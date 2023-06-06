@@ -1,6 +1,5 @@
-import path from "@file-services/path";
 import React, { useEffect } from "react";
-import { editor, languages } from "monaco-editor-core";
+import { editor, Uri } from "monaco-editor-core";
 
 const monacoWorkerBundleLocation = "vendors/monaco-worker.js";
 
@@ -9,16 +8,17 @@ export namespace CodeEditor {
     className?: string | undefined;
     value?: string | undefined;
     filePath?: string | undefined;
+    language?: string | undefined;
   }
 }
 
-export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, value, filePath }) => {
+export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, value = "", filePath, language }) => {
   const containerRef = React.createRef<HTMLDivElement>();
 
   useEffect(() => {
+    const model = editor.createModel(value, language, filePath ? Uri.file(filePath) : undefined);
     const codeEditor = editor.create(containerRef.current!, {
-      value: value!,
-      language: filePath !== undefined ? extensionToLanguage.get(path.extname(filePath))! : undefined!,
+      model,
       theme: "vs-dark",
     });
     const resizeCodeEditor = () => codeEditor.layout();
@@ -26,6 +26,7 @@ export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, v
     return () => {
       window.removeEventListener("resize", resizeCodeEditor);
       codeEditor.dispose();
+      model.dispose();
     };
   });
 
@@ -39,15 +40,6 @@ globalThis.MonacoEnvironment = {
   createTrustedTypesPolicy: globalThis.trustedTypes
     ?.createPolicy as import("monaco-editor-core").Environment["createTrustedTypesPolicy"],
 };
-
-const extensionToLanguage = new Map<string, string>();
-for (const { id, extensions } of languages.getLanguages()) {
-  if (extensions) {
-    for (const extension of extensions) {
-      extensionToLanguage.set(extension, id);
-    }
-  }
-}
 
 declare namespace globalThis {
   let MonacoEnvironment: import("monaco-editor-core").Environment | undefined;
