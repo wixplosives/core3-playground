@@ -1,11 +1,11 @@
 import { del, get, update } from "idb-keyval";
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { type Compilation, type LibraryVersions } from "./compilation/compilation-worker";
+import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
+import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./helpers/w3c-file-system";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
-import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./w3c-file-system";
 
 const openProjectsIDBKey = "playground-projects";
 const compilationWorkerName = "Compilation";

@@ -1,8 +1,8 @@
-import { compileUsingTypescript } from "../compilers/typescript-compiler";
-import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "../helpers/vendor-libs";
-import { log } from "../log";
-import { rpcResponder } from "../rpc/rpc-responder";
-import type { RpcCall } from "../rpc/rpc-types";
+import { compileUsingTypescript } from "./compilers/typescript-compiler";
+import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
+import { log } from "./log";
+import { rpcResponder } from "./rpc/rpc-responder";
+import type { RpcCall } from "./rpc/rpc-types";
 
 const wixUnpkgURL = new URL("https://static.parastorage.com/unpkg/");
 

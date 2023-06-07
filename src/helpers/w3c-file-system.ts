@@ -1,6 +1,6 @@
 import path from "@file-services/path";
-import type { IndentedList } from "./components/indented-list";
-import { directoryNameToIcon, fileNameToIcon } from "./icons/path-to-icon";
+import type { IndentedList } from "../components/indented-list";
+import { directoryNameToIcon, fileNameToIcon } from "../icons/path-to-icon";
 
 const sortHandlesByName = (a: FileSystemHandle, b: FileSystemHandle) => (a.name >= b.name ? 1 : -1);
 
