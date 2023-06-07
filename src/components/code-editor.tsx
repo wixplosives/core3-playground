@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { editor, Uri, type Environment } from "monaco-editor-core";
 
-const monacoWorkerURL = new URL("vendors/monaco-worker.js", import.meta.url);
+const monacoWorkerURL = new URL("vendors/monaco-generic-worker.js", import.meta.url);
 const monacoJsonWorkerURL = new URL("vendors/monaco-json-worker.js", import.meta.url);
 
 export namespace CodeEditor {

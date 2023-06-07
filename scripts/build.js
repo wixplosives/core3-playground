@@ -79,7 +79,7 @@ async function buildVendors() {
     bundle: true,
     entryPoints: [
       "src/vendors/monaco.ts",
-      "src/vendors/monaco-worker.ts",
+      "src/vendors/monaco-generic-worker.ts",
       "src/vendors/monaco-json-worker.ts",
       /* "src/vendors/isomorphic-git.ts"*/
     ],
