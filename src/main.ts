@@ -1,4 +1,4 @@
-import "./variables.css";
+import "./helpers/reset.css";
 import "./main.css";
 import { PlaygroundApp } from "./playground-app";
 

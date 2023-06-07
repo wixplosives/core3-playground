@@ -19,7 +19,7 @@ const buildOptions = {
   format: "esm",
   legalComments: "none",
   bundle: true,
-  entryPoints: ["src/main.tsx", "src/compilation/compilation-worker.ts"],
+  entryPoints: ["src/main.ts", "src/compilation/compilation-worker.ts"],
   entryNames: "[name]",
   loader: {
     ".json": "json",
