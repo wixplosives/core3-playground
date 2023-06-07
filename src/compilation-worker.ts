@@ -1,6 +1,7 @@
 import { compileUsingTypescript } from "./compilers/typescript-compiler";
-import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
+import { fetchText } from "./helpers/dom";
 import { log } from "./helpers/log";
+import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
 import { rpcResponder } from "./rpc/rpc-responder";
 import type { RpcCall } from "./rpc/rpc-types";
 
@@ -62,12 +63,4 @@ function compile(filePath: string, fileContents: string): string {
 
 function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
   return new URL(`${packageName}@${packageVersion}/${pathInPackage}`, wixUnpkgURL);
-}
-
-async function fetchText(targetURL: URL): Promise<string> {
-  const response = await fetch(targetURL);
-  if (!response.ok) {
-    throw new Error(`"HTTP ${response.status}: ${response.statusText}" while fetching ${targetURL.href}`);
-  }
-  return response.text();
 }

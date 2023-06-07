@@ -1,9 +1,10 @@
-import React, { Suspense, useMemo } from "react";
 import path from "@file-services/path";
-import { StatusBar } from "./status-bar";
+import React, { Suspense, useMemo } from "react";
+import { loadScript, loadStylesheet } from "../helpers/dom";
 import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
 import { Sidebar } from "./sidebar";
+import { StatusBar } from "./status-bar";
 import { Tabs } from "./tabs";
 import classes from "./editor.module.css";
 
@@ -91,30 +92,3 @@ export const Editor = React.memo<Editor.Props>(
 );
 
 Editor.displayName = "Editor";
-
-const loadScript = async (targetUrl: string) => {
-  const existingScriptEl = document.querySelector(`script[src="${targetUrl}"]`);
-  if (existingScriptEl) {
-    return;
-  }
-  const scriptElement = document.body.appendChild(document.createElement("script"));
-  await loadWithTrigger(scriptElement, "src", targetUrl);
-};
-
-const loadStylesheet = async (targetUrl: string) => {
-  const existingLinkEl = document.querySelector(`link[href="${targetUrl}"]`);
-  if (existingLinkEl) {
-    return;
-  }
-  const linkEl = document.head.appendChild(document.createElement("link"));
-  linkEl.rel = "stylesheet";
-  await loadWithTrigger(linkEl, "href", targetUrl);
-};
-
-function loadWithTrigger<T extends HTMLElement, K extends keyof T>(element: T, key: K, value: T[K]) {
-  return new Promise<unknown>((res, rej) => {
-    element.addEventListener("load", res, { once: true });
-    element.addEventListener("error", rej, { once: true });
-    element[key] = value;
-  });
-}
