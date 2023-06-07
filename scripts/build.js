@@ -36,7 +36,7 @@ const buildOptions = {
   plugins: [
     cssModulesPlugin({ v2: true, v2CssModulesOption: { pattern: "[hash]-[local]" } }),
     globalExternals({
-      "monaco-editor-core": { varName: "monaco", namedExports: ["editor", "Uri"] },
+      "monaco-editor": { varName: "monaco", namedExports: ["editor", "Uri"] },
       // "isomorphic-git": { varName: "isomorphicGit.git" },
       // "isomorphic-git/http/web": { varName: "isomorphicGit.httpClient" },
     }),
@@ -79,8 +79,10 @@ async function buildVendors() {
     bundle: true,
     entryPoints: [
       "src/vendors/monaco.ts",
-      "src/vendors/monaco-generic-worker.ts",
+      "src/vendors/monaco-css-worker.ts",
+      "src/vendors/monaco-html-worker.ts",
       "src/vendors/monaco-json-worker.ts",
+      "src/vendors/monaco-generic-worker.ts",
       /* "src/vendors/isomorphic-git.ts"*/
     ],
     loader: {

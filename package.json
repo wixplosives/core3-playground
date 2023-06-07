@@ -17,9 +17,7 @@
     "buffer": "^6.0.3",
     "idb-keyval": "^6.2.1",
     "isomorphic-git": "^1.24.0",
-    "monaco-editor-core": "^0.39.0",
-    "monaco-json": "^3.9.0",
-    "monaco-languages": "^2.11.1",
+    "monaco-editor": "^0.39.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -28,7 +26,6 @@
     "@types/node": "18",
     "@types/react": "^18.2.8",
     "@types/react-dom": "^18.2.4",
-    "@types/trusted-types": "^2.0.3",
     "@types/wicg-file-system-access": "^2020.9.6",
     "@typescript-eslint/eslint-plugin": "^5.59.9",
     "esbuild": "^0.17.19",

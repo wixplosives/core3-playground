@@ -11,7 +11,10 @@ export const defaultLibVersions: LibraryVersions = {
 
 export const monacoJsBundle = "vendors/monaco.js";
 export const monacoCssBundle = "vendors/monaco.css";
+export const monacoCssWorkerBundle = "vendors/monaco-css-worker.js";
 export const monacoGenericWorkerBundle = "vendors/monaco-generic-worker.js";
+export const monacoHtmlWorkerBundle = "vendors/monaco-html-worker.js";
 export const monacoJsonWorkerBundle = "vendors/monaco-json-worker.js";
 
+export const schemaStoreCatalogURL = "https://www.schemastore.org/api/json/catalog.json";
 export const wixUnpkgURL = "https://static.parastorage.com/unpkg/";

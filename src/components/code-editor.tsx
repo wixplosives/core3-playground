@@ -1,9 +1,5 @@
-import { Uri, editor, type Environment } from "monaco-editor-core";
+import { Uri, editor } from "monaco-editor";
 import React, { useEffect } from "react";
-import { monacoGenericWorkerBundle, monacoJsonWorkerBundle } from "../constants";
-
-const monacoWorkerURL = new URL(monacoGenericWorkerBundle, import.meta.url);
-const monacoJsonWorkerURL = new URL(monacoJsonWorkerBundle, import.meta.url);
 
 export namespace CodeEditor {
   export interface Props {
@@ -36,21 +32,5 @@ export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, v
 });
 
 CodeEditor.displayName = "CodeEditor";
-
-globalThis.MonacoEnvironment = {
-  getWorker: (_workerId, language) => {
-    if (language === "json") {
-      return new Worker(monacoJsonWorkerURL, { name: "Monaco JSON Worker" });
-    } else {
-      return new Worker(monacoWorkerURL, { name: "Monaco Generic Worker" });
-    }
-  },
-  createTrustedTypesPolicy: globalThis.trustedTypes?.createPolicy as Environment["createTrustedTypesPolicy"],
-};
-
-declare namespace globalThis {
-  let MonacoEnvironment: Environment | undefined;
-  let trustedTypes: Window["trustedTypes"];
-}
 
 export default CodeEditor;
