@@ -4,7 +4,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
-import { collectIntoArray, getDeepFileHandle, ignoreRejections, readDirectoryDeep } from "./helpers/w3c-file-system";
+import { collectIntoArray, ignoreRejections } from "./helpers/javascript";
+import { getDeepFileHandle, readDirectoryDeep } from "./helpers/w3c-file-system";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 
 const openProjectsIDBKey = "playground-projects";
