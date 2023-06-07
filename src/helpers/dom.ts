@@ -32,3 +32,18 @@ export async function fetchText(targetURL: URL): Promise<string> {
   }
   return response.text();
 }
+
+export function classNames(...classes: Array<string | false | undefined>): string | undefined {
+  let spaceSeparated = "";
+  let hasClasses = false;
+  for (const className of classes) {
+    if (className) {
+      if (hasClasses) {
+        spaceSeparated += " ";
+      }
+      spaceSeparated += className;
+      hasClasses = true;
+    }
+  }
+  return hasClasses ? spaceSeparated : undefined;
+}

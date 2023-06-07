@@ -1,4 +1,5 @@
 import React from "react";
+import { classNames } from "../helpers/dom";
 import classes from "./tabs.module.css";
 import cssUtils from "./utils.module.css";
 
@@ -29,12 +30,12 @@ export const Tabs: React.FC<Tabs.Props> = React.memo(({ tabs, selectedTabIdx, on
     }
   };
   return (
-    <ul className={`${classes["tabs"]!} ${cssUtils["hideScrollbar"]!}`} onClick={onClick} onAuxClick={onAuxClick}>
+    <ul className={classNames(classes["tabs"], cssUtils["hideScrollbar"])} onClick={onClick} onAuxClick={onAuxClick}>
       {tabs?.map(({ title, id, tooltip }, idx) => (
         <li
           key={id}
           title={tooltip}
-          className={selectedTabIdx === idx ? `${classes["tab"]!} ${classes["selected"]!}` : classes["tab"]}
+          className={classNames(classes["tab"], selectedTabIdx === idx && classes["selected"])}
           data-id={id}
         >
           {title}
