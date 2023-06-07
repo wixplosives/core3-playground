@@ -7,9 +7,7 @@ import { Sidebar } from "./sidebar";
 import { StatusBar } from "./status-bar";
 import { Tabs } from "./tabs";
 import classes from "./editor.module.css";
-
-const monacoJsBundle = "vendors/monaco.js";
-const monacoCssBundle = "vendors/monaco.css";
+import { monacoJsBundle, monacoCssBundle } from "../constants";
 
 const CodeEditor = React.lazy(async () => {
   await Promise.all([loadScript(monacoJsBundle), loadStylesheet(monacoCssBundle)]);

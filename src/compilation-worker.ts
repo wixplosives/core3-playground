@@ -1,11 +1,10 @@
+import { wixUnpkgURL } from "./constants";
 import { fetchText } from "./helpers/dom";
 import { log } from "./helpers/log";
 import { compileUsingTypescript } from "./helpers/typescript";
 import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
 import { rpcResponder } from "./rpc/rpc-responder";
 import type { RpcCall } from "./rpc/rpc-types";
-
-const wixUnpkgURL = new URL("https://static.parastorage.com/unpkg/");
 
 export interface Compilation {
   /** Initialize compilation environment's typescript and sass */
