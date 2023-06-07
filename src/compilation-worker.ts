@@ -1,6 +1,6 @@
-import { compileUsingTypescript } from "./compilers/typescript-compiler";
 import { fetchText } from "./helpers/dom";
 import { log } from "./helpers/log";
+import { compileUsingTypescript } from "./helpers/typescript";
 import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
 import { rpcResponder } from "./rpc/rpc-responder";
 import type { RpcCall } from "./rpc/rpc-types";
