@@ -104,20 +104,17 @@ export class PlaygroundApp {
       this.rootDirectoryHandle = directoryHandle;
       this.openFiles = [];
       await this.calculateFileTreeItems();
+      this.renderApp();
+      await this.initializeProject(directoryHandle);
     }
   }
 
   private onOpenLocal = async () => {
     const directoryHandle = await ignoreRejections(window.showDirectoryPicker());
     if (directoryHandle) {
-      await this.setRootDirectoryHandle(directoryHandle);
-      await update<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey, (savedProjects = {}) => {
-        savedProjects[directoryHandle.name] = directoryHandle;
-        return savedProjects;
-      });
+      await this.saveProject(directoryHandle);
       await this.loadSavedProjects();
-      this.renderApp();
-      await this.initializeProject(directoryHandle);
+      await this.setRootDirectoryHandle(directoryHandle);
     }
   };
 
@@ -130,8 +127,14 @@ export class PlaygroundApp {
       return;
     }
     await this.setRootDirectoryHandle(savedDirectoryHandle);
-    this.renderApp();
   };
+
+  private async saveProject(directoryHandle: FileSystemDirectoryHandle) {
+    await update<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey, (savedProjects = {}) => {
+      savedProjects[directoryHandle.name] = directoryHandle;
+      return savedProjects;
+    });
+  }
 
   private async handleHasPermission(fileSystemHandle: FileSystemHandle) {
     if ((await fileSystemHandle.queryPermission()) === "granted") {
