@@ -21,7 +21,7 @@ export function rpcResponder<API>({ api, dispatchResponse }: ResponderOptions<AP
         type: "response",
         id,
         methodName,
-        error: `${methodName} is not a function. typeof returned ${typeof method}`,
+        error: new Error(`${methodName} is not a function. typeof returned ${typeof method}`),
       } as RpcResponse<API>);
     } else {
       try {
