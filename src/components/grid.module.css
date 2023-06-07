@@ -12,7 +12,6 @@
   color: var(--text-color);
   height: 100%;
   display: grid;
-  background-color: red;
   grid-template-columns: 1fr calc(var(--border-size) * 1.5) 20em 4em;
   grid-template-rows: 1fr 2em;
   grid-template-areas:
