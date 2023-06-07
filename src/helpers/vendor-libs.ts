@@ -1,4 +1,9 @@
 import { createBaseCjsModuleSystem } from "@file-services/commonjs";
+import { wixUnpkgURL } from "../constants";
+
+export function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
+  return new URL(`${packageName}@${packageVersion}/${pathInPackage}`, wixUnpkgURL);
+}
 
 export function evaluateSassLib(sassURL: string, sassLibText: string, immutableLibText: string, immutableURL: string) {
   const immutableJsModuleSystem = singlePackageModuleSystem("immutable", immutableURL, immutableLibText);

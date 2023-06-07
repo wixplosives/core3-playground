@@ -1,8 +1,7 @@
-import { wixUnpkgURL } from "./constants";
 import { fetchText } from "./helpers/dom";
 import { log } from "./helpers/log";
 import { compileUsingTypescript } from "./helpers/typescript";
-import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle } from "./helpers/vendor-libs";
+import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle, unpkgUrlFor } from "./helpers/vendor-libs";
 import { rpcResponder } from "./rpc/rpc-responder";
 import type { RpcCall } from "./rpc/rpc-types";
 
@@ -58,8 +57,4 @@ function compile(filePath: string, fileContents: string): string {
   };
 
   return compileUsingTypescript(ts, filePath, fileContents, compilerOptions);
-}
-
-function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
-  return new URL(`${packageName}@${packageVersion}/${pathInPackage}`, wixUnpkgURL);
 }
