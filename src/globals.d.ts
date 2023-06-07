@@ -7,3 +7,7 @@ declare module "*.svg" {
   const urlToFile: string;
   export default urlToFile;
 }
+
+declare module "monaco-editor/esm/vs/editor/edcore.main" {
+  export * from "monaco-editor";
+}
