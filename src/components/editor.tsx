@@ -11,7 +11,7 @@ import { monacoJsBundle, monacoCssBundle } from "../constants";
 
 const CodeEditor = React.lazy(async () => {
   await Promise.all([loadScript(monacoJsBundle), loadStylesheet(monacoCssBundle)]);
-  return await import("./code-editor");
+  return import("./code-editor");
 });
 
 export namespace Editor {
