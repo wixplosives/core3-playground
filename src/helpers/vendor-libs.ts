@@ -5,6 +5,12 @@ export function unpkgUrlFor(packageName: string, packageVersion: string, pathInP
   return new URL(`${packageName}@${packageVersion}/${pathInPackage}`, wixUnpkgURL);
 }
 
+type SassDeps = {
+  util: unknown;
+  immutable: unknown;
+};
+type SassLoadFn = (deps: SassDeps, target: unknown) => void;
+
 export function evaluateSassLib(sassURL: string, sassLibText: string, immutableLibText: string, immutableURL: string) {
   const immutableJsModuleSystem = singlePackageModuleSystem("immutable", immutableURL, immutableLibText);
   const immutable = immutableJsModuleSystem.requireModule(immutableURL) as typeof import("immutable");
@@ -31,11 +37,12 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
   });
 
   const sassExports = sassModuleSystem.requireModule(sassURL) as {
-    load: (deps: { util: unknown; immutable: unknown }, target: unknown) => void;
+    load: SassLoadFn;
   };
-
+  const load =
+    sassExports.load ?? (globalThis as unknown as { _cliPkgExports: [{ load: SassLoadFn }] })?._cliPkgExports[0]?.load;
   const sassLib = {} as unknown as typeof import("sass");
-  sassExports.load({ util: { inspect: {} }, immutable }, sassLib);
+  load({ util: { inspect: {} }, immutable }, sassLib);
   return "info" in sassLib ? sassLib : (sassExports as unknown as typeof import("sass"));
 }
 
