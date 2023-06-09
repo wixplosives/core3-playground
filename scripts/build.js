@@ -45,19 +45,11 @@ const buildOptions = {
 
 await fs.rm(outPath, { recursive: true, force: true });
 await fs.mkdir(outPath, { recursive: true });
-for (const item of await fs.readdir(publicPath, { withFileTypes: true })) {
-  if (!item.isFile()) {
-    continue;
-  }
-  const pathInPublic = new URL(item.name, publicPath);
-  const targetPath = new URL(item.name, outPath);
-  if (isWatch && item.name.endsWith(".html")) {
-    await fs.writeFile(targetPath, injectReloadScript(await fs.readFile(pathInPublic, "utf8")));
-  } else {
-    await fs.cp(pathInPublic, targetPath);
-  }
+await fs.cp(publicPath, outPath, { recursive: true });
+if (isWatch) {
+  const indexHtmlPath = new URL("index.html", outPath);
+  await fs.writeFile(indexHtmlPath, injectReloadScript(await fs.readFile(indexHtmlPath, "utf8")));
 }
-
 await buildVendors();
 
 if (isWatch) {

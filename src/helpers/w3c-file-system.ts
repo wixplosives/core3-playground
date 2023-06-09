@@ -1,6 +1,6 @@
 import path from "@file-services/path";
 import type { IndentedList } from "../components/indented-list";
-import { directoryNameToIcon, fileNameToIcon } from "../icons/path-to-icon";
+import { directoryNameToIcon, fileNameToIcon } from "./icons";
 
 const sortHandlesByName = (a: FileSystemHandle, b: FileSystemHandle) => (a.name >= b.name ? 1 : -1);
 
@@ -27,12 +27,13 @@ export async function* readDirectoryHandle(directoryHandle: FileSystemDirectoryH
 export async function* readDirectoryDeep(
   directoryHandle: FileSystemDirectoryHandle,
   directoryPath: string,
-  openedDirectories: Set<string>,
+  expandedDirectories: Set<string>,
   depth = 0
 ): AsyncGenerator<IndentedList.Item> {
   for await (const childHandle of readDirectoryHandle(directoryHandle)) {
     const childPath = path.join(directoryPath, childHandle.name);
     const isDirectory = childHandle.kind === "directory";
+    const isExpanded = expandedDirectories.has(childPath);
     if (isDirectory && childHandle.name === ".git") {
       continue;
     }
@@ -40,11 +41,11 @@ export async function* readDirectoryDeep(
       id: childPath,
       depth,
       label: childHandle.name,
-      iconUrl: isDirectory ? directoryNameToIcon(childHandle.name) : fileNameToIcon(childHandle.name),
+      iconUrl: isDirectory ? directoryNameToIcon(childHandle.name, isExpanded) : fileNameToIcon(childHandle.name),
       type: childHandle.kind,
     };
-    if (isDirectory && openedDirectories.has(childPath)) {
-      yield* readDirectoryDeep(childHandle, childPath, openedDirectories, depth + 1);
+    if (isDirectory && isExpanded) {
+      yield* readDirectoryDeep(childHandle, childPath, expandedDirectories, depth + 1);
     }
   }
 }
