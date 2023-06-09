@@ -4,24 +4,36 @@ import { iconsCatalog } from "./icons-catalog";
 const fileIconPath = (iconName: string) => `icons/${iconName}.svg`;
 
 export function fileNameToIcon(fileName: string): string {
+  return fileIconPath(matchFileIcon(fileName) ?? matchFileIcon(fileName.toLowerCase()) ?? iconsCatalog.file);
+}
+
+function matchFileIcon(fileName: string): string | undefined {
   const exactMatch = iconsCatalog.fileNames[fileName];
   if (exactMatch) {
-    return fileIconPath(exactMatch);
+    return exactMatch;
   }
   const parsedName = path.parse(fileName);
   const innerExtension = path.extname(parsedName.name);
-  const combinedExtIcon = innerExtension
-    ? iconsCatalog.fileExtensions[innerExtension.slice(1) + parsedName.ext]
-    : undefined;
-  return fileIconPath(combinedExtIcon ?? iconsCatalog.fileExtensions[parsedName.ext.slice(1)] ?? iconsCatalog.file);
+  return (
+    iconsCatalog.fileExtensions[innerExtension.slice(1) + parsedName.ext] ??
+    iconsCatalog.fileExtensions[parsedName.ext.slice(1)]
+  );
 }
 
 const directoryIconPath = (iconName: string) => `icons/${iconName}.svg`;
 
 export function directoryNameToIcon(directoryName: string, isExpanded: boolean): string {
+  const iconName =
+    matchDirectoryIcon(directoryName, isExpanded) ??
+    matchDirectoryIcon(directoryName.toLowerCase(), isExpanded) ??
+    (isExpanded ? iconsCatalog.folderExpanded : iconsCatalog.folder);
+  return directoryIconPath(iconName);
+}
+
+function matchDirectoryIcon(directoryName: string, isExpanded: boolean): string | undefined {
   if (isExpanded) {
-    return directoryIconPath(iconsCatalog.folderNamesExpanded[directoryName] ?? iconsCatalog.folderExpanded);
+    return iconsCatalog.folderNamesExpanded[directoryName];
   } else {
-    return directoryIconPath(iconsCatalog.folderNames[directoryName] ?? iconsCatalog.folder);
+    return iconsCatalog.folderNames[directoryName];
   }
 }
