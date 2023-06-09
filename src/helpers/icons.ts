@@ -14,10 +14,7 @@ function matchFileIcon(fileName: string): string | undefined {
   }
   const parsedName = path.parse(fileName);
   const innerExtension = path.extname(parsedName.name);
-  return (
-    iconsCatalog.fileExtensions[innerExtension.slice(1) + parsedName.ext] ??
-    iconsCatalog.fileExtensions[parsedName.ext.slice(1)]
-  );
+  return iconsCatalog.fileExtensions[innerExtension + parsedName.ext] ?? iconsCatalog.fileExtensions[parsedName.ext];
 }
 
 const directoryIconPath = (iconName: string) => `icons/${iconName}.svg`;

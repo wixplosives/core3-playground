@@ -28,7 +28,7 @@ const catalog = {
   rootFolderExpanded: manifest.rootFolderExpanded,
   folderNames: { ...manifest.folderNames },
   folderNamesExpanded: { ...manifest.folderNamesExpanded },
-  fileExtensions: { ...manifest.fileExtensions },
+  fileExtensions: prefixKeysWithDot(manifest.fileExtensions),
   fileNames: { ...manifest.fileNames },
 };
 
@@ -50,7 +50,7 @@ for (const [id, { extensions = [], filenames = [] }] of Object.entries(getBuilti
     continue;
   }
   for (const ext of extensions) {
-    catalog.fileExtensions[ext.slice(1)] ??= languageIcon;
+    catalog.fileExtensions[ext] ??= languageIcon;
   }
   for (const fileName of filenames) {
     catalog.fileNames[fileName] ??= languageIcon;
@@ -58,17 +58,17 @@ for (const [id, { extensions = [], filenames = [] }] of Object.entries(getBuilti
 }
 
 const { languages } = await import(new URL("out/src/iconsManifest/languages.js", vscodeIconsRoot));
-const exacttMatchLanguageName = new Set();
+const exactMatchLanguageExt = new Set();
 for (const [lanaguageName, { defaultExtension }] of Object.entries(languages)) {
   if (languageIds[lanaguageName] && lanaguageName === defaultExtension) {
-    catalog.fileExtensions[defaultExtension] = languageIds[lanaguageName];
-    exacttMatchLanguageName.add(defaultExtension);
+    catalog.fileExtensions[`.${defaultExtension}`] = languageIds[lanaguageName];
+    exactMatchLanguageExt.add(defaultExtension);
   }
 }
 
 for (const [lanaguageName, { ids, defaultExtension }] of Object.entries(languages)) {
-  if (languageIds[lanaguageName] && lanaguageName === ids && !exacttMatchLanguageName.has(defaultExtension)) {
-    catalog.fileExtensions[defaultExtension] = languageIds[lanaguageName];
+  if (languageIds[lanaguageName] && lanaguageName === ids && !exactMatchLanguageExt.has(defaultExtension)) {
+    catalog.fileExtensions[`.${defaultExtension}`] = languageIds[lanaguageName];
   }
 }
 
@@ -76,7 +76,7 @@ for (const [lanaguageName, { ids, defaultExtension }] of Object.entries(language
   const allLanguageIds = typeof ids === "string" ? [lanaguageName, ids] : [lanaguageName, ...ids];
   for (const languageId of allLanguageIds) {
     if (languageIds[languageId]) {
-      catalog.fileExtensions[defaultExtension] ??= languageIds[languageId];
+      catalog.fileExtensions[`.${defaultExtension}`] ??= languageIds[languageId];
     }
   }
 }
@@ -114,6 +114,10 @@ function spawnSyncSafe(cmd, cmdArgs = [], options) {
   if (status !== 0) {
     throw new Error(`Error while executing: ${[cmd, ...cmdArgs].join(" ")}`);
   }
+}
+
+function prefixKeysWithDot(record) {
+  return Object.fromEntries(Array.from(Object.entries(record), ([key, value]) => [`.${key}`, value]));
 }
 
 function getBuiltinLanguages() {
