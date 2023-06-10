@@ -5,8 +5,8 @@ import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
 import { compilationBundleName, compilationWorkerName, defaultLibVersions, openProjectsIDBKey } from "./constants";
-import { collectIntoArray, ignoreRejections } from "./helpers/javascript";
-import { getDeepFileHandle, readDirectoryDeep } from "./helpers/w3c-file-system";
+import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
+import { getDeepFileHandle, getPathToFile, readDirectoryDeep } from "./helpers/w3c-file-system";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 
 export class PlaygroundApp {
@@ -194,11 +194,3 @@ declare namespace globalThis {
 interface PackageLock {
   packages?: Record<string, { version?: string }>;
 }
-
-function getPathToFile(itemId: string): string[] {
-  const pathToFile = itemId.split("/");
-  pathToFile.shift();
-  return pathToFile;
-}
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(min, value), max);

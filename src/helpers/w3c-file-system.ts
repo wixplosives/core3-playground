@@ -4,6 +4,12 @@ import { directoryNameToIcon, fileNameToIcon } from "./icons";
 
 const sortHandlesByName = (a: FileSystemHandle, b: FileSystemHandle) => (a.name >= b.name ? 1 : -1);
 
+export function getPathToFile(filePath: string): string[] {
+  const pathToFile = filePath.split("/");
+  pathToFile.shift();
+  return pathToFile;
+}
+
 /** Generate sorted lists of files and directories that the directory contains */
 export async function* readDirectoryHandle(directoryHandle: FileSystemDirectoryHandle) {
   const files: FileSystemFileHandle[] = [];

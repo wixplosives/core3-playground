@@ -13,3 +13,5 @@ export async function ignoreRejections<T>(promise: Promise<T>): Promise<T | unde
     return undefined;
   }
 }
+
+export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(min, value), max);
