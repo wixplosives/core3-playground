@@ -19,6 +19,7 @@ const buildOptions = {
   format: "esm",
   legalComments: "none",
   bundle: true,
+  target: "es2022",
   entryPoints: ["src/main.ts", "src/compilation-worker.ts"],
   entryNames: "[name]",
   loader: {
@@ -69,6 +70,7 @@ async function buildVendors() {
     format: "iife",
     legalComments: "none",
     bundle: true,
+    target: "es2022",
     entryPoints: [
       "src/vendors/monaco.ts",
       "src/vendors/monaco-css-worker.ts",
