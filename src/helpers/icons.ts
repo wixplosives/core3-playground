@@ -1,7 +1,7 @@
 import path from "@file-services/path";
 import { iconsCatalog } from "./icons-catalog";
 
-const fileIconPath = (iconName: string) => `icons/${iconName}.svg`;
+const fileIconPath = (iconName: string) => `icons/file/${iconName}.svg`;
 
 export function fileNameToIcon(fileName: string): string {
   return fileIconPath(matchFileIcon(fileName) ?? matchFileIcon(fileName.toLowerCase()) ?? iconsCatalog.file);
@@ -17,7 +17,7 @@ function matchFileIcon(fileName: string): string | undefined {
   return iconsCatalog.fileExtensions[innerExtension + parsedName.ext] ?? iconsCatalog.fileExtensions[parsedName.ext];
 }
 
-const directoryIconPath = (iconName: string) => `icons/${iconName}.svg`;
+const directoryIconPath = (iconName: string) => `icons/folder/${iconName}.svg`;
 
 export function directoryNameToIcon(directoryName: string, isExpanded: boolean): string {
   const iconName =

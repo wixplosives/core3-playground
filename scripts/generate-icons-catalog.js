@@ -36,8 +36,9 @@ function remapIdsToNames(catalogRecord) {
   for (const [key, value] of Object.entries(catalogRecord)) {
     if (typeof value === "string") {
       const iconName = path.parse(iconDefinitions[value].iconPath).name;
-      catalogRecord[key] = iconName;
-      usedIcons.add(iconName);
+      const {remappedIconName, type} = remapIconName(iconName);
+      catalogRecord[key] = remappedIconName;
+      usedIcons.add({ iconName, remappedIconName, type });
     } else if (typeof value === "object") {
       remapIdsToNames(value);
     }
@@ -85,10 +86,11 @@ remapIdsToNames(catalog);
 
 fs.rmSync(publicIconsRoot, { recursive: true, force: true });
 fs.mkdirSync(publicIconsRoot, { recursive: true });
+fs.mkdirSync(new URL("file/", publicIconsRoot));
+fs.mkdirSync(new URL("folder/", publicIconsRoot));
 
-for (const iconName of usedIcons) {
-  const iconFileName = `${iconName}.svg`;
-  fs.copyFileSync(new URL(iconFileName, svgIconsRoot), new URL(iconFileName, publicIconsRoot));
+for (const { iconName, remappedIconName, type } of usedIcons) {
+  fs.copyFileSync(new URL(`${iconName}.svg`, svgIconsRoot), new URL(`${type}/${remappedIconName}.svg`, publicIconsRoot));
 }
 
 const catalogTs = `export interface IconsCatalog {
@@ -118,6 +120,21 @@ function spawnSyncSafe(cmd, cmdArgs = [], options) {
 
 function prefixKeysWithDot(record) {
   return Object.fromEntries(Array.from(Object.entries(record), ([key, value]) => [`.${key}`, value]));
+}
+
+function remapIconName(iconName) {
+  if (iconName.startsWith("file_type_")) {
+    return { remappedIconName: iconName.slice("file_type_".length), type: "file" };
+  } else if (iconName.startsWith("folder_type_")) {
+    return { remappedIconName: iconName.slice("folder_type_".length), type: "folder" };
+  } else if (iconName.startsWith("default_")) {
+    if (iconName.includes("_folder")) {
+      return { remappedIconName: iconName, type: "folder" };
+    } else if (iconName.includes("_file")) {
+      return { remappedIconName: iconName, type: "file" };
+    }
+  }
+  throw new Error(`unknown icon name structure: ${iconName}`)
 }
 
 function getBuiltinLanguages() {
