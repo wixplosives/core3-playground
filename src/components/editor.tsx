@@ -1,13 +1,14 @@
 import path from "@file-services/path";
 import React, { Suspense, useMemo } from "react";
+import { monacoCssBundle, monacoJsBundle } from "../constants";
 import { loadScript, loadStylesheet } from "../helpers/dom";
+import classes from "./editor.module.css";
 import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
+import { ImageViewer } from "./image-viewer";
 import { Sidebar } from "./sidebar";
 import { StatusBar } from "./status-bar";
 import { Tabs } from "./tabs";
-import classes from "./editor.module.css";
-import { monacoJsBundle, monacoCssBundle } from "../constants";
 
 const CodeEditor = React.lazy(async () => {
   await Promise.all([loadScript(monacoJsBundle), loadStylesheet(monacoCssBundle)]);
@@ -28,7 +29,16 @@ export namespace Editor {
     onClearSaved?: FileExplorer.Props["onClearSaved"];
   }
 
-  export interface OpenFile {
+  export type OpenFile = OpenTextFile | OpenImageFile;
+
+  export interface OpenImageFile {
+    type: "image-viewer";
+    filePath: string;
+    imageUrl: string;
+  }
+
+  export interface OpenTextFile {
+    type: "code-editor";
     filePath: string;
     fileContents: string;
   }
@@ -61,14 +71,23 @@ export const Editor = React.memo<Editor.Props>(
         content={
           <>
             <Tabs tabs={tabs} selectedTabIdx={selectedFileIdx} onTabClick={onTabClick} onTabClose={onTabClose} />
-            {openFile && (
+            {openFile?.type === "code-editor" && (
               <Suspense fallback={"Loading..."}>
                 <CodeEditor
                   className={classes["codeEditor"]}
                   value={openFile.fileContents}
                   filePath={openFile.filePath}
+                  key={openFile.filePath}
                 />
               </Suspense>
+            )}
+            {openFile?.type === "image-viewer" && (
+              <ImageViewer
+                className={classes["imageViewer"]}
+                imageUrl={openFile.imageUrl}
+                filePath={openFile.filePath}
+                key={openFile.filePath}
+              />
             )}
           </>
         }

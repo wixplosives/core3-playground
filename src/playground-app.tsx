@@ -1,3 +1,4 @@
+import { extname } from "@file-services/path";
 import { del, get, update } from "idb-keyval";
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -5,6 +6,7 @@ import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
 import { compilationBundleName, compilationWorkerName, defaultLibVersions, openProjectsIDBKey } from "./constants";
+import { imageMimeTypes } from "./helpers/dom";
 import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
 import { getDeepFileHandle, getPathToFile, readDirectoryDeep } from "./helpers/w3c-file-system";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
@@ -67,8 +69,20 @@ export class PlaygroundApp {
           const fileHandle = await getDeepFileHandle(this.rootDirectoryHandle, pathToFile);
           if (fileHandle) {
             const file = await fileHandle.getFile();
-            const fileContents = await file.text();
-            this.openFiles = [...this.openFiles, { filePath: itemId, fileContents }];
+            const fileExtension = extname(itemId);
+            const imageMimeType = imageMimeTypes.get(fileExtension);
+            const openFile: Editor.OpenFile = imageMimeType
+              ? {
+                  type: "image-viewer",
+                  filePath: itemId,
+                  imageUrl: URL.createObjectURL(new Blob([await file.arrayBuffer()], { type: imageMimeType })),
+                }
+              : {
+                  type: "code-editor",
+                  filePath: itemId,
+                  fileContents: await file.text(),
+                };
+            this.openFiles = [...this.openFiles, openFile];
             this.selectedFileIdx = this.openFiles.length - 1;
           }
         }
@@ -89,6 +103,10 @@ export class PlaygroundApp {
     const targetFileIdx = openFiles.findIndex(({ filePath }) => tabId === filePath);
     if (targetFileIdx === -1) {
       return;
+    }
+    const openFileToClose = openFiles[targetFileIdx]!;
+    if (openFileToClose.type === "image-viewer") {
+      URL.revokeObjectURL(openFileToClose.imageUrl);
     }
     this.openFiles = [...openFiles.slice(0, targetFileIdx), ...openFiles.slice(targetFileIdx + 1)];
     if (targetFileIdx === this.selectedFileIdx) {

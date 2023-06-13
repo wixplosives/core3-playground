@@ -1,0 +1,17 @@
+.imageViewer {
+  --checker-background-color: #ffffff;
+  --checker-box-color: #b9b9b9;
+  --checker-size: 1em;
+  --checker-gradient: linear-gradient(
+    45deg,
+    var(--checker-box-color) 25%,
+    transparent 25%,
+    transparent 75%,
+    var(--checker-box-color) 75%
+  );
+  background-color: var(--checker-background-color);
+  background-image: var(--checker-gradient), var(--checker-gradient);
+  background-position: 0 0, var(--checker-size) var(--checker-size);
+  background-size: calc(var(--checker-size) * 2) calc(var(--checker-size) * 2);
+  align-self: center;
+}
