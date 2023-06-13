@@ -47,3 +47,16 @@ export function classNames(...classes: Array<string | false | undefined>): strin
   }
   return hasClasses ? spaceSeparated : undefined;
 }
+
+export const imageMimeTypes = new Map([
+  [".avif", "image/avif"],
+  [".bmp", "image/bmp"],
+  [".gif", "image/gif"],
+  [".heif", "image/heif"],
+  [".jpeg", "image/jpeg"],
+  [".jpg", "image/jpeg"],
+  [".png", "image/png"],
+  [".tif", "image/tiff"],
+  [".tiff", "image/tiff"],
+  [".webp", "image/webp"],
+]);
