@@ -17,9 +17,9 @@
 
 .content {
   grid-area: content;
-  display: flex;
-  flex-direction: column;
   background: var(--dark-background);
+  display: grid;
+  grid-template-rows: 3rem calc(100% - 3rem);
 }
 
 .panel {
