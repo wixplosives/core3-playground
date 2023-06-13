@@ -1,9 +1,10 @@
 .fileTree {
   margin-bottom: 1em;
+  min-width: max-content
 }
 
 .openLocal {
-  margin-right: 1em;
+  margin-inline-end: 1em;
   margin-bottom: 1em;
 }
 
