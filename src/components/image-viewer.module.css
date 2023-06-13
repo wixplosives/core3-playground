@@ -1,4 +1,25 @@
 .imageViewer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.stage {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage > .view {
+  display: block;
+}
+
+.controls {
+}
+
+.checkersBg {
   --checker-background-color: #ffffff;
   --checker-box-color: #b9b9b9;
   --checker-size: 1em;
@@ -13,5 +34,4 @@
   background-image: var(--checker-gradient), var(--checker-gradient);
   background-position: 0 0, var(--checker-size) var(--checker-size);
   background-size: calc(var(--checker-size) * 2) calc(var(--checker-size) * 2);
-  align-self: center;
 }
