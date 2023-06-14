@@ -35,7 +35,7 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "open": "^9.1.0",
-    "sass": "^1.63.3",
+    "sass": "^1.63.4",
     "type-fest": "^3.11.1",
     "typescript": "~5.1.3"
   },
