@@ -53,6 +53,7 @@ export const imageMimeTypes = new Map([
   [".bmp", "image/bmp"],
   [".gif", "image/gif"],
   [".heif", "image/heif"],
+  [".ico", "image/vnd.microsoft.icon"],
   [".jpeg", "image/jpeg"],
   [".jpg", "image/jpeg"],
   [".png", "image/png"],
