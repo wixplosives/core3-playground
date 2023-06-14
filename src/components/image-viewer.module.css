@@ -21,7 +21,7 @@
 
 .checkersBg {
   --checker-background-color: #ffffff;
-  --checker-box-color: #b9b9b9;
+  --checker-box-color: #e6e6e6;
   --checker-size: 1em;
   --checker-gradient: linear-gradient(
     45deg,
