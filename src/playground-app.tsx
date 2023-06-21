@@ -127,6 +127,7 @@ export class PlaygroundApp {
         this.closeFile(openFile);
       }
       this.openFiles = [];
+      this.openDirectories.clear();
       await this.calculateFileTreeItems();
       this.renderApp();
       await this.initializeProject(directoryHandle);
