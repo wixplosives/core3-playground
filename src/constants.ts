@@ -5,7 +5,7 @@ export const compilationWorkerName = "Compilation";
 export const compilationBundleName = "compilation-worker.js";
 export const defaultLibVersions: LibraryVersions = {
   typescript: "5.1.3",
-  sass: "1.63.4",
+  sass: "1.63.5",
   immutable: "4.3.0",
 };
 
