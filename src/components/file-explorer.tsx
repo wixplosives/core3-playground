@@ -4,10 +4,10 @@ import classes from "./file-explorer.module.css";
 
 export namespace FileExplorer {
   export interface Props {
-    items?: IndentedList.Item[] | undefined;
+    items?: IndentedList.Props["items"] | undefined;
     onItemClick?: IndentedList.Props["onItemClick"];
     onOpenLocal?: (() => unknown) | undefined;
-    savedProjectNames?: string[] | undefined;
+    savedProjectNames?: readonly string[] | undefined;
     onOpenSaved?: ((projectName: string) => unknown) | undefined;
     onClearSaved?: (() => unknown) | undefined;
   }

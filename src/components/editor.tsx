@@ -17,7 +17,7 @@ const CodeEditor = React.lazy(async () => {
 
 export namespace Editor {
   export interface Props {
-    openFiles?: OpenFile[] | undefined;
+    openFiles?: readonly OpenFile[] | undefined;
     selectedFileIdx?: number | undefined;
     onTabClick?: Tabs.Props["onTabClick"];
     onTabClose?: Tabs.Props["onTabClose"];

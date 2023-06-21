@@ -18,10 +18,10 @@ export class PlaygroundApp {
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
 
   // passed to UI
-  private openFiles: Editor.OpenFile[] = [];
+  private openFiles: readonly Editor.OpenFile[] = [];
   private selectedFileIdx = -1;
-  private fileTreeItems: IndentedList.Item[] | undefined;
-  private savedProjectNames?: string[] | undefined;
+  private fileTreeItems: readonly IndentedList.Item[] | undefined;
+  private savedProjectNames?: readonly string[] | undefined;
 
   public showUI(container: HTMLElement) {
     this.appRoot = createRoot(container);
