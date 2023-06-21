@@ -5,6 +5,7 @@
   padding-inline-end: 0.5em;
   white-space: nowrap;
   cursor: pointer;
+  user-select: none;
 }
 
 .item:hover {
