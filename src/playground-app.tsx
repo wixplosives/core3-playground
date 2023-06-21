@@ -98,16 +98,19 @@ export class PlaygroundApp {
     this.renderApp();
   };
 
+  private closeFile = (openFile: Editor.OpenFile) => {
+    if (openFile.type === "image-viewer") {
+      URL.revokeObjectURL(openFile.imageUrl);
+    }
+  };
+
   private onTabClose = (tabId: string) => {
     const { openFiles } = this;
     const targetFileIdx = openFiles.findIndex(({ filePath }) => tabId === filePath);
     if (targetFileIdx === -1) {
       return;
     }
-    const openFileToClose = openFiles[targetFileIdx]!;
-    if (openFileToClose.type === "image-viewer") {
-      URL.revokeObjectURL(openFileToClose.imageUrl);
-    }
+    this.closeFile(openFiles[targetFileIdx]!);
     this.openFiles = [...openFiles.slice(0, targetFileIdx), ...openFiles.slice(targetFileIdx + 1)];
     if (targetFileIdx === this.selectedFileIdx) {
       this.selectedFileIdx = this.openFiles.length ? clamp(targetFileIdx, 0, this.openFiles.length - 1) : -1;
@@ -120,6 +123,9 @@ export class PlaygroundApp {
   private async setRootDirectoryHandle(directoryHandle: FileSystemDirectoryHandle) {
     if (this.rootDirectoryHandle !== directoryHandle) {
       this.rootDirectoryHandle = directoryHandle;
+      for (const openFile of this.openFiles) {
+        this.closeFile(openFile);
+      }
       this.openFiles = [];
       await this.calculateFileTreeItems();
       this.renderApp();
