@@ -16,6 +16,7 @@ export class PlaygroundApp {
   private rootDirectoryHandle?: FileSystemDirectoryHandle | undefined;
   private openDirectories = new Set<string>();
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
+  private compilation?: RPCWorker<Compilation> | undefined;
 
   // passed to UI
   private openFiles: readonly Editor.OpenFile[] = [];
@@ -181,13 +182,13 @@ export class PlaygroundApp {
   }
 
   private async initializeProject(rootDirectoryHandle: FileSystemDirectoryHandle) {
-    globalThis.compilation?.close();
+    this.compilation?.close();
     const compilationWorkerURL = new URL(compilationBundleName, import.meta.url);
     const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, {
       name: compilationWorkerName,
       type: "module",
     });
-    globalThis.compilation = compilationWorker;
+    this.compilation = compilationWorker;
 
     const packageLockHandle = await ignoreRejections(rootDirectoryHandle.getFileHandle("package-lock.json"));
     const libVersions = packageLockHandle ? await this.getLibVersions(packageLockHandle) : defaultLibVersions;
@@ -210,10 +211,6 @@ export class PlaygroundApp {
 
     return { typescript: typescriptVersion, sass: sassVersion, immutable: immutableVersion };
   }
-}
-
-declare namespace globalThis {
-  let compilation: RPCWorker<Compilation> | undefined;
 }
 
 interface PackageLock {
