@@ -23,7 +23,29 @@
   border-bottom-width: 2px;
 }
 
+.tabTitle {
+  flex: 1;
+  pointer-events: none;
+}
+
+.closeButton:hover {
+  color: var(--accent-color);
+}
+
+.tab:not(.selected) .closeButton  {
+  display: none;
+}
+
+.tab:hover:not(.selected) .closeButton  {
+  display: unset;
+}
+
+
 .selected {
   border-bottom-color: var(--accent-color);
   border-bottom-width: 2px;
+}
+
+.closeIcon {
+  display: block;
 }
