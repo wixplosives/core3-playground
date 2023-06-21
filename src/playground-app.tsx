@@ -201,11 +201,11 @@ export class PlaygroundApp {
     const packageLockFile = await packageLockHandle.getFile();
     const packageLock = JSON.parse(await packageLockFile.text()) as PackageLock;
     const { packages = {} } = packageLock;
-    const typescriptVersion = packages["node_modules/typescript"]?.version ?? defaultLibVersions.typescript;
-    const sassVersion = packages["node_modules/sass"]?.version ?? defaultLibVersions.sass;
+    const typescriptVersion = packages[packagePath("typescript")]?.version ?? defaultLibVersions.typescript;
+    const sassVersion = packages[packagePath("sass")]?.version ?? defaultLibVersions.sass;
     const immutableVersion =
-      packages["node_modules/sass/node_modules/immutable"]?.version ??
-      packages["node_modules/immutable"]?.version ??
+      packages[packagePath(`sass/${packagePath("immutable")}`)]?.version ??
+      packages[packagePath("immutable")]?.version ??
       defaultLibVersions.immutable;
 
     return { typescript: typescriptVersion, sass: sassVersion, immutable: immutableVersion };
@@ -219,3 +219,5 @@ declare namespace globalThis {
 interface PackageLock {
   packages?: Record<string, { version?: string }>;
 }
+
+const packagePath = <T extends string>(packageName: T) => `node_modules/${packageName}` as const;
