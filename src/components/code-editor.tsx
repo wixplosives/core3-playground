@@ -10,7 +10,7 @@ export namespace CodeEditor {
   }
 }
 
-export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, value = "", filePath, language }) => {
+const CodeEditor: React.FC<CodeEditor.Props> = ({ className, value = "", filePath, language }) => {
   const containerRef = React.createRef<HTMLDivElement>();
 
   useEffect(() => {
@@ -29,8 +29,11 @@ export const CodeEditor: React.FC<CodeEditor.Props> = React.memo(({ className, v
   });
 
   return <div className={className} ref={containerRef} />;
-});
+};
 
 CodeEditor.displayName = "CodeEditor";
 
-export default CodeEditor;
+const MemoizedCodeEditor = React.memo(CodeEditor);
+
+export { MemoizedCodeEditor as CodeEditor };
+export default MemoizedCodeEditor;
