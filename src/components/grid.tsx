@@ -25,3 +25,5 @@ export const Grid: React.FC<Grid.Props> = ({ content, panel, sidebar, status }) 
     </div>
   );
 };
+
+Grid.displayName = "Grid";
