@@ -6,14 +6,16 @@ import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
 import { compilationBundleName, compilationWorkerName, defaultLibVersions, openProjectsIDBKey } from "./constants";
+import { generateIndentedFsItems } from "./fs/async-fs-operations";
+import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { imageMimeTypes } from "./helpers/dom";
 import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
-import { getDeepFileHandle, getPathToFile, readDirectoryDeep } from "./helpers/w3c-file-system";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 
 export class PlaygroundApp {
+  private fs: BrowserFileSystem | undefined;
+
   private appRoot: Root | undefined;
-  private rootDirectoryHandle?: FileSystemDirectoryHandle | undefined;
   private openDirectories = new Set<string>();
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
   private compilation?: RPCWorker<Compilation> | undefined;
@@ -64,31 +66,24 @@ export class PlaygroundApp {
       await this.calculateFileTreeItems();
     } else if (itemType === "file") {
       const itemIdx = this.openFiles.findIndex(({ filePath }) => itemId === filePath);
-      if (itemIdx === -1) {
-        const pathToFile = getPathToFile(itemId);
-        if (this.rootDirectoryHandle) {
-          const fileHandle = await getDeepFileHandle(this.rootDirectoryHandle, pathToFile);
-          if (fileHandle) {
-            const file = await fileHandle.getFile();
-            const fileExtension = extname(itemId);
-            const imageMimeType = imageMimeTypes.get(fileExtension);
-            const openFile: Editor.OpenFile = imageMimeType
-              ? {
-                  type: "image-viewer",
-                  filePath: itemId,
-                  imageUrl: URL.createObjectURL(new Blob([await file.arrayBuffer()], { type: imageMimeType })),
-                }
-              : {
-                  type: "code-editor",
-                  filePath: itemId,
-                  fileContents: await file.text(),
-                };
-            this.openFiles = [...this.openFiles, openFile];
-            this.selectedFileIdx = this.openFiles.length - 1;
-          }
-        }
-      } else {
+      if (itemIdx !== -1) {
         this.selectedFileIdx = itemIdx;
+      } else if (this.fs && (await this.fs.fileExists(itemId))) {
+        const fileExtension = extname(itemId);
+        const imageMimeType = imageMimeTypes.get(fileExtension);
+        const openFile: Editor.OpenFile = imageMimeType
+          ? {
+              type: "image-viewer",
+              filePath: itemId,
+              imageUrl: URL.createObjectURL(new Blob([await this.fs.readFile(itemId)], { type: imageMimeType })),
+            }
+          : {
+              type: "code-editor",
+              filePath: itemId,
+              fileContents: await this.fs.readTextFile(itemId),
+            };
+        this.openFiles = [...this.openFiles, openFile];
+        this.selectedFileIdx = this.openFiles.length - 1;
       }
     }
     this.renderApp();
@@ -122,17 +117,15 @@ export class PlaygroundApp {
   };
 
   private async setRootDirectoryHandle(directoryHandle: FileSystemDirectoryHandle) {
-    if (this.rootDirectoryHandle !== directoryHandle) {
-      this.rootDirectoryHandle = directoryHandle;
-      for (const openFile of this.openFiles) {
-        this.closeFile(openFile);
-      }
-      this.openFiles = [];
-      this.openDirectories.clear();
-      await this.calculateFileTreeItems();
-      this.renderApp();
-      await this.initializeProject(directoryHandle);
+    for (const openFile of this.openFiles) {
+      this.closeFile(openFile);
     }
+    this.openFiles = [];
+    this.openDirectories.clear();
+    this.fs = createBrowserFileSystem(directoryHandle);
+    await this.calculateFileTreeItems();
+    this.renderApp();
+    await this.initializeProject(this.fs);
   }
 
   private onOpenLocal = async () => {
@@ -176,12 +169,12 @@ export class PlaygroundApp {
   };
 
   private async calculateFileTreeItems() {
-    this.fileTreeItems = this.rootDirectoryHandle
-      ? await collectIntoArray(readDirectoryDeep(this.rootDirectoryHandle, "/", this.openDirectories))
+    this.fileTreeItems = this.fs
+      ? await collectIntoArray(generateIndentedFsItems(this.fs, "/", this.openDirectories))
       : undefined;
   }
 
-  private async initializeProject(rootDirectoryHandle: FileSystemDirectoryHandle) {
+  private async initializeProject(fs: BrowserFileSystem) {
     this.compilation?.close();
     const compilationWorkerURL = new URL(compilationBundleName, import.meta.url);
     const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, {
@@ -190,18 +183,17 @@ export class PlaygroundApp {
     });
     this.compilation = compilationWorker;
 
-    const packageLockHandle = await ignoreRejections(rootDirectoryHandle.getFileHandle("package-lock.json"));
-    const libVersions = packageLockHandle ? await this.getLibVersions(packageLockHandle) : defaultLibVersions;
+    const rootPackageLockPath = "/package-lock.json";
+    const libVersions = (await fs.fileExists(rootPackageLockPath))
+      ? this.getLibVersions((await fs.readJSONFile(rootPackageLockPath)) as PackageLock)
+      : defaultLibVersions;
     await compilationWorker.api.initialize(libVersions);
     // const contents = await compilationWorker.api.compile("/a.ts", `export const a = 123;\nthrow new Error('wow');`);
     // console.log(contents);
     // (0, eval)(`(function (exports){${contents}\n})({})`);
   }
 
-  private async getLibVersions(packageLockHandle: FileSystemFileHandle): Promise<LibraryVersions> {
-    const packageLockFile = await packageLockHandle.getFile();
-    const packageLock = JSON.parse(await packageLockFile.text()) as PackageLock;
-    const { packages = {} } = packageLock;
+  private getLibVersions({ packages = {} }: PackageLock): LibraryVersions {
     const typescriptVersion = packages[packagePath("typescript")]?.version ?? defaultLibVersions.typescript;
     const sassVersion = packages[packagePath("sass")]?.version ?? defaultLibVersions.sass;
     const immutableVersion =
