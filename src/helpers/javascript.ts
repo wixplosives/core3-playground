@@ -6,7 +6,7 @@ export async function collectIntoArray<T>(asyncIter: AsyncIterable<T>): Promise<
   return collected;
 }
 
-export async function ignoreRejections<T>(promise: Promise<T>): Promise<T | undefined> {
+export async function ignoreRejections<T>(promise?: Promise<T>): Promise<T | undefined> {
   try {
     return await promise;
   } catch {
