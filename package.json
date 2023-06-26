@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@file-services/commonjs": "^7.3.0",
-    "@file-services/path": "^7.3.0",
+    "@file-services/commonjs": "^7.4.0",
+    "@file-services/path": "^7.4.0",
     "buffer": "^6.0.3",
     "idb-keyval": "^6.2.1",
     "isomorphic-git": "^1.24.2",
@@ -27,7 +27,7 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "@types/wicg-file-system-access": "^2020.9.6",
-    "@typescript-eslint/eslint-plugin": "^5.60.0",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
     "esbuild": "^0.18.9",
     "esbuild-css-modules-plugin": "^2.7.1",
     "eslint": "^8.43.0",
