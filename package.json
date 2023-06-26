@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@file-services/commonjs": "^7.3.0",
+    "@file-services/commonjs": "^7.4.0",
     "@file-services/path": "^7.3.0",
     "buffer": "^6.0.3",
     "idb-keyval": "^6.2.1",
