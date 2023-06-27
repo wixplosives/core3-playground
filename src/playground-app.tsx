@@ -5,7 +5,13 @@ import { createRoot, type Root } from "react-dom/client";
 import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
-import { compilationBundleName, compilationWorkerName, defaultLibVersions, openProjectsIDBKey } from "./constants";
+import {
+  compilationBundleName,
+  compilationWorkerName,
+  defaultLibVersions,
+  ignoredFileTreeDirectories,
+  openProjectsIDBKey,
+} from "./constants";
 import { generateIndentedFsItems } from "./fs/async-fs-operations";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { imageMimeTypes } from "./helpers/dom";
@@ -170,7 +176,9 @@ export class PlaygroundApp {
 
   private async calculateFileTreeItems() {
     this.fileTreeItems = this.fs
-      ? await collectIntoArray(generateIndentedFsItems(this.fs, "/", this.openDirectories))
+      ? await collectIntoArray(
+          generateIndentedFsItems(await this.fs.openDirectory("/"), this.openDirectories, ignoredFileTreeDirectories)
+        )
       : undefined;
   }
 

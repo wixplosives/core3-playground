@@ -18,3 +18,4 @@ export const monacoJsonWorkerBundle = "vendors/monaco-json-worker.js";
 
 export const schemaStoreCatalogURL = "https://www.schemastore.org/api/json/catalog.json";
 export const wixUnpkgURL = "https://static.parastorage.com/unpkg/";
+export const ignoredFileTreeDirectories: ReadonlySet<string> = new Set([".git"]);

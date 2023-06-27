@@ -1,17 +1,17 @@
 import type { IndentedList } from "../components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "../helpers/icons";
-import type { AsyncFileSystem } from "./async-fs-api";
+import type { FileSystemDirectoryItem } from "./async-fs-api";
 
 export async function* generateIndentedFsItems(
-  fs: AsyncFileSystem,
-  directoryPath: string,
-  expandedDirectories: Set<string>,
+  directoryItem: FileSystemDirectoryItem,
+  expandedDirectories: ReadonlySet<string>,
+  ignoredDirectories: ReadonlySet<string> = new Set<string>(),
   depth = 0
 ): AsyncGenerator<IndentedList.Item> {
-  for await (const item of await fs.openDirectory(directoryPath)) {
+  for await (const item of directoryItem) {
     const isDirectory = item.type === "directory";
     const isExpanded = expandedDirectories.has(item.path);
-    if (isDirectory && item.name === ".git") {
+    if (isDirectory && ignoredDirectories.has(item.name)) {
       continue;
     }
     yield {
@@ -22,7 +22,7 @@ export async function* generateIndentedFsItems(
       type: item.type,
     };
     if (isDirectory && isExpanded) {
-      yield* generateIndentedFsItems(fs, item.path, expandedDirectories, depth + 1);
+      yield* generateIndentedFsItems(item, expandedDirectories, ignoredDirectories, depth + 1);
     }
   }
 }
