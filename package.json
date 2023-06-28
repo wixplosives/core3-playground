@@ -37,7 +37,7 @@
     "open": "^9.1.0",
     "sass": "^1.63.6",
     "type-fest": "^3.12.0",
-    "typescript": "~5.1.3"
+    "typescript": "~5.1.5"
   },
   "keywords": [],
   "author": "Wix.com",
