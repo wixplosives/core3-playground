@@ -1,12 +1,15 @@
+import { version as tsVersion } from "typescript/package.json";
+// import { version as sassVersion } from "sass/package.json";
+import { version as immutableVersion } from "immutable/package.json";
 import type { LibraryVersions } from "./compilation-worker";
 
 export const openProjectsIDBKey = "playground-projects";
 export const compilationWorkerName = "Compilation";
 export const compilationBundleName = "compilation-worker.js";
 export const defaultLibVersions: LibraryVersions = {
-  typescript: "5.1.3",
-  sass: "1.63.6",
-  immutable: "4.3.0",
+  typescript: tsVersion,
+  sass: "1.63.6", // sassVersion
+  immutable: immutableVersion,
 };
 
 export const monacoJsBundle = "vendors/monaco.js";
