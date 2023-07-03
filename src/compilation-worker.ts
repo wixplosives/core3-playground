@@ -1,5 +1,4 @@
 import { fetchText } from "./helpers/dom";
-import { log } from "./helpers/log";
 import { compileUsingTypescript } from "./helpers/typescript";
 import { evaluateSassLib, evaluateTypescriptLib, fixTypescriptBundle, unpkgUrlFor } from "./helpers/vendor-libs";
 import { rpcResponder } from "./rpc/rpc-responder";
@@ -40,9 +39,9 @@ async function initialize(versions: LibraryVersions): Promise<void> {
   ]);
 
   ts = evaluateTypescriptLib(typescriptURL.href, fixTypescriptBundle(typescriptLibText));
-  const sass = evaluateSassLib(sassURL.href, sassLibText, immutableLibText, immutableURL.href);
-  log(ts.version);
-  log(sass.info);
+  evaluateSassLib(sassURL.href, sassLibText, immutableLibText, immutableURL.href);
+  // log(ts.version);
+  // log(sass.info);
 }
 
 function compile(filePath: string, fileContents: string): string {
