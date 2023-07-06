@@ -1,3 +1,4 @@
+import { Base64 } from "js-base64";
 import type ts from "typescript";
 
 interface SourceMapLike {
@@ -49,5 +50,5 @@ function hasSingleOrigin({ sources }: SourceMapLike) {
 }
 
 function createBase64DataURI(value: string, mimeType = `application/json`): string {
-  return `data:${mimeType};base64,${btoa(value)}`;
+  return `data:${mimeType};base64,${Base64.encode(value)}`;
 }
