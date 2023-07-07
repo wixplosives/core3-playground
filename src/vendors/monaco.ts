@@ -19,7 +19,6 @@ globalThis.MonacoEnvironment = {
     const workerName = languageToWorker[language]?.workerName ?? "Monaco Generic Worker";
     return new Worker(workerBundle, { name: workerName });
   },
-  createTrustedTypesPolicy: undefined!, // should be optional
 };
 
 const languageToWorker: Record<string, { workerBundle: string; workerName: string }> = {

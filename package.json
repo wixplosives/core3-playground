@@ -17,7 +17,7 @@
     "buffer": "^6.0.3",
     "idb-keyval": "^6.2.1",
     "js-base64": "^3.7.5",
-    "monaco-editor": "^0.39.0",
+    "monaco-editor": "^0.40.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
