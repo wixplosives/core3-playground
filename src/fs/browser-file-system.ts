@@ -95,7 +95,7 @@ function createFileItem(fileHandle: FileSystemFileHandle, filePath: string): Fil
 
 function createDirectoryItem(
   directoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string
+  directoryPath: string,
 ): FileSystemDirectoryItem {
   return {
     type: "directory",
@@ -109,7 +109,7 @@ function createDirectoryItem(
 
 async function* createDirectoryIterator(
   directoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string
+  directoryPath: string,
 ): AsyncGenerator<FileSystemDirectoryItem | FileSystemFileItem> {
   for await (const handle of readDirectoryHandleSorted(directoryHandle)) {
     const itemPath = path.join(directoryPath, handle.name);
@@ -145,7 +145,7 @@ async function* readDirectoryHandleSorted(directoryHandle: FileSystemDirectoryHa
 
 async function getDeepFileHandle(
   rootDirectoryHandle: FileSystemDirectoryHandle,
-  filePath: string
+  filePath: string,
 ): Promise<FileSystemFileHandle | undefined> {
   const fileBasename = path.basename(filePath);
   const parentPath = path.dirname(filePath);
@@ -155,7 +155,7 @@ async function getDeepFileHandle(
 
 async function getDeepDirectoryHandle(
   rootDirectoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string
+  directoryPath: string,
 ): Promise<FileSystemDirectoryHandle | undefined> {
   const directoryChain = directoryPath.split("/");
   let currentDirectoryHandle = rootDirectoryHandle;

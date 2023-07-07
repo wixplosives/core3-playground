@@ -32,14 +32,13 @@
   color: var(--accent-color);
 }
 
-.tab:not(.selected) .closeButton  {
+.tab:not(.selected) .closeButton {
   display: none;
 }
 
-.tab:hover:not(.selected) .closeButton  {
+.tab:hover:not(.selected) .closeButton {
   display: unset;
 }
-
 
 .selected {
   border-bottom-color: var(--accent-color);

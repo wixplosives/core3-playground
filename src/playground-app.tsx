@@ -58,7 +58,7 @@ export class PlaygroundApp {
           onClearSaved={this.onClearSaved}
           onTabClose={this.onTabClose}
         />
-      </React.StrictMode>
+      </React.StrictMode>,
     );
   }
 
@@ -177,7 +177,7 @@ export class PlaygroundApp {
   private async calculateFileTreeItems() {
     this.fileTreeItems = this.fs
       ? await collectIntoArray(
-          generateIndentedFsItems(await this.fs.openDirectory("/"), this.openDirectories, ignoredFileTreeDirectories)
+          generateIndentedFsItems(await this.fs.openDirectory("/"), this.openDirectories, ignoredFileTreeDirectories),
         )
       : undefined;
   }

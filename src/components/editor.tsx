@@ -60,9 +60,9 @@ export const Editor = React.memo<Editor.Props>(
     const tabs = useMemo(
       () =>
         openFiles?.map(
-          ({ filePath }): Tabs.Tab => ({ id: filePath, title: path.basename(filePath), tooltip: filePath })
+          ({ filePath }): Tabs.Tab => ({ id: filePath, title: path.basename(filePath), tooltip: filePath }),
         ) ?? [],
-      [openFiles]
+      [openFiles],
     );
     const openFile = openFiles && selectedFileIdx !== undefined ? openFiles[selectedFileIdx] : undefined;
 
@@ -105,7 +105,7 @@ export const Editor = React.memo<Editor.Props>(
         status={<StatusBar />}
       />
     );
-  }
+  },
 );
 
 Editor.displayName = "Editor";

@@ -32,6 +32,8 @@
   );
   background-color: var(--checker-background-color);
   background-image: var(--checker-gradient), var(--checker-gradient);
-  background-position: 0 0, var(--checker-size) var(--checker-size);
+  background-position:
+    0 0,
+    var(--checker-size) var(--checker-size);
   background-size: calc(var(--checker-size) * 2) calc(var(--checker-size) * 2);
 }

@@ -12,7 +12,7 @@ export function compileUsingTypescript(
   { transpileModule }: typeof ts,
   filePath: string,
   fileContents: string,
-  compilerOptions: ts.CompilerOptions
+  compilerOptions: ts.CompilerOptions,
 ): string {
   const { outputText, sourceMapText } = transpileModule(fileContents, {
     compilerOptions,

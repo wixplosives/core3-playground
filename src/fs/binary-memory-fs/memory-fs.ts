@@ -153,7 +153,7 @@ export function createMemoryFs(): IMemFileSystem {
   function readFileSync(filePath: string, options?: { encoding?: null; flag?: string } | null): Uint8Array;
   function readFileSync(
     filePath: string,
-    options: { encoding: BufferEncoding; flag?: string } | BufferEncoding
+    options: { encoding: BufferEncoding; flag?: string } | BufferEncoding,
   ): string;
   function readFileSync(filePath: string, options?: ReadFileOptions): string | Uint8Array {
     const resolvedPath = resolvePath(filePath);
@@ -242,15 +242,15 @@ export function createMemoryFs(): IMemFileSystem {
 
   function readdirSync(
     directoryPath: string,
-    options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null
+    options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null,
   ): string[];
   function readdirSync(
     directoryPath: string,
-    options?: { encoding?: BufferEncoding | null; withFileTypes?: true } | BufferEncoding | null
+    options?: { encoding?: BufferEncoding | null; withFileTypes?: true } | BufferEncoding | null,
   ): IDirectoryEntry[];
   function readdirSync(
     directoryPath: string,
-    options?: { encoding?: BufferEncoding | null; withFileTypes?: boolean } | BufferEncoding | null
+    options?: { encoding?: BufferEncoding | null; withFileTypes?: boolean } | BufferEncoding | null,
   ): string[] | IDirectoryEntry[] {
     const resolvedPath = resolvePath(directoryPath);
     const directoryNode = getNode(resolvedPath);
@@ -365,7 +365,7 @@ export function createMemoryFs(): IMemFileSystem {
   function statSync(nodePath: string, options?: StatSyncOptions & { throwIfNoEntry?: true }): IFileSystemStats;
   function statSync(
     nodePath: string,
-    options: StatSyncOptions & { throwIfNoEntry: false }
+    options: StatSyncOptions & { throwIfNoEntry: false },
   ): IFileSystemStats | undefined;
   function statSync(nodePath: string, options?: StatSyncOptions): IFileSystemStats | undefined {
     const resolvedPath = resolvePath(nodePath);
@@ -384,7 +384,7 @@ export function createMemoryFs(): IMemFileSystem {
   function lstatSync(nodePath: string, options?: StatSyncOptions & { throwIfNoEntry?: true }): IFileSystemStats;
   function lstatSync(
     nodePath: string,
-    options: StatSyncOptions & { throwIfNoEntry: false }
+    options: StatSyncOptions & { throwIfNoEntry: false },
   ): IFileSystemStats | undefined;
   function lstatSync(nodePath: string, options?: StatSyncOptions): IFileSystemStats | undefined {
     const resolvedPath = resolvePath(nodePath);
@@ -629,7 +629,7 @@ const returnsFalse = () => false;
 function createFsError(
   path: string,
   message: FsErrorCodes,
-  code: "ENOENT" | "EEXIST" | "EISDIR" | "ENOTDIR" | "ENOTEMPTY" | "EINVAL"
+  code: "ENOENT" | "EEXIST" | "EISDIR" | "ENOTDIR" | "ENOTEMPTY" | "EINVAL",
 ): Error {
   const error = new Error(`${path} ${message}`);
   (error as Error & { path: string }).path = path;

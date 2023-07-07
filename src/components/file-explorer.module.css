@@ -1,6 +1,6 @@
 .fileTree {
   margin-bottom: 1em;
-  min-width: max-content
+  min-width: max-content;
 }
 
 .openLocal {
@@ -12,4 +12,3 @@
   display: block;
   margin-bottom: 0.5em;
 }
-

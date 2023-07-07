@@ -41,7 +41,7 @@ export const FileExplorer: React.FC<FileExplorer.Props> = React.memo(
           ))}
       </>
     );
-  }
+  },
 );
 
 FileExplorer.displayName = "FileExplorer";

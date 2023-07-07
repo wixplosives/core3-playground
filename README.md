@@ -3,12 +3,14 @@
 code playground, client-only, web application
 
 ## react
+
 - v18
 - strict mode
 - new jsx create element
 - naive dumb components
 
 ## esbuild
+
 - super fast- less than 1s for development or production builds
 - custom build script under `scripts/build.js`
 - added plugin for css modules
@@ -17,6 +19,7 @@ code playground, client-only, web application
 - auto opens chrome in dev mode
 
 ## monaco-editor
+
 - all built-in basic languages activated (syntax highlighting)
 - activated full language service for:
   - css, scss, less

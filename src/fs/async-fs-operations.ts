@@ -6,7 +6,7 @@ export async function* generateIndentedFsItems(
   directoryItem: FileSystemDirectoryItem,
   expandedDirectories: ReadonlySet<string>,
   ignoredDirectories: ReadonlySet<string> = new Set<string>(),
-  depth = 0
+  depth = 0,
 ): AsyncGenerator<IndentedList.Item> {
   for await (const item of directoryItem) {
     const isDirectory = item.type === "directory";

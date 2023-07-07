@@ -58,7 +58,7 @@ export interface IFileSystemSyncActions {
    */
   readdirSync(
     directoryPath: string,
-    options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null
+    options?: { encoding: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null,
   ): string[];
   readdirSync(directoryPath: string, options: { withFileTypes: true }): IDirectoryEntry[];
 
@@ -161,7 +161,7 @@ export interface IFileSystemPromiseActions {
    */
   readdir(
     directoryPath: string,
-    options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null
+    options?: { encoding?: BufferEncoding | null; withFileTypes?: false } | BufferEncoding | null,
   ): Promise<string[]>;
   readdir(directoryPath: string, options: { withFileTypes: true }): Promise<IDirectoryEntry[]>;
 

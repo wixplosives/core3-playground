@@ -36,7 +36,7 @@ function remapIdsToNames(catalogRecord) {
   for (const [key, value] of Object.entries(catalogRecord)) {
     if (typeof value === "string") {
       const iconName = path.parse(iconDefinitions[value].iconPath).name;
-      const {remappedIconName, type} = remapIconName(iconName);
+      const { remappedIconName, type } = remapIconName(iconName);
       catalogRecord[key] = remappedIconName;
       usedIcons.add({ iconName, remappedIconName, type });
     } else if (typeof value === "object") {
@@ -90,7 +90,10 @@ fs.mkdirSync(new URL("file/", publicIconsRoot));
 fs.mkdirSync(new URL("folder/", publicIconsRoot));
 
 for (const { iconName, remappedIconName, type } of usedIcons) {
-  fs.copyFileSync(new URL(`${iconName}.svg`, svgIconsRoot), new URL(`${type}/${remappedIconName}.svg`, publicIconsRoot));
+  fs.copyFileSync(
+    new URL(`${iconName}.svg`, svgIconsRoot),
+    new URL(`${type}/${remappedIconName}.svg`, publicIconsRoot),
+  );
 }
 
 const catalogTs = `export interface IconsCatalog {
@@ -134,7 +137,7 @@ function remapIconName(iconName) {
       return { remappedIconName: iconName, type: "file" };
     }
   }
-  throw new Error(`unknown icon name structure: ${iconName}`)
+  throw new Error(`unknown icon name structure: ${iconName}`);
 }
 
 function getBuiltinLanguages() {

@@ -8,7 +8,7 @@ export interface RPCWorker<T extends object> {
 
 export function createRPCWorker<T extends object>(
   workerURL: URL,
-  workerOptions?: WorkerOptions | undefined
+  workerOptions?: WorkerOptions | undefined,
 ): RPCWorker<T> {
   const listenerController = new AbortController();
   const worker = new Worker(workerURL, workerOptions);

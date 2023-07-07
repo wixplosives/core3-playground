@@ -311,7 +311,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
 
   async function resolveRemappedSpecifier(
     directoryPath: string,
-    to: string | false
+    to: string | false,
   ): Promise<string | false | undefined> {
     if (to === false) {
       return to;
@@ -388,7 +388,7 @@ type ParsedTemplate = { prefix: string };
  * The remapper supports paths ending with "/*", both in key and value.
  */
 export function createSpecifierRemapper<T extends string | false>(
-  mapping: Record<string, T>
+  mapping: Record<string, T>,
 ): (specifier: string) => T | undefined {
   const parsedTemplateMap = new Map<string | ParsedTemplate, T | ParsedTemplate>();
   let hasTemplate = false;
@@ -412,7 +412,7 @@ export function createSpecifierRemapper<T extends string | false>(
 
 function getFromParsedTemplateMap<T extends string | false>(
   map: Map<string | ParsedTemplate, T | ParsedTemplate>,
-  specifier: string
+  specifier: string,
 ): T | undefined {
   for (const [key, value] of map) {
     const keyType = typeof key;
