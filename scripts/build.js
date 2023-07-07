@@ -38,8 +38,6 @@ const buildOptions = {
     cssModulesPlugin({ v2: true, v2CssModulesOption: { pattern: "[hash]-[local]" } }),
     globalExternals({
       "monaco-editor": { varName: "monaco", namedExports: ["editor", "Uri", "languages"] },
-      // "isomorphic-git": { varName: "isomorphicGit.git" },
-      // "isomorphic-git/http/web": { varName: "isomorphicGit.httpClient" },
     }),
   ],
 };
@@ -77,7 +75,6 @@ async function buildVendors() {
       "src/vendors/monaco-generic-worker.ts",
       "src/vendors/monaco-html-worker.ts",
       "src/vendors/monaco-json-worker.ts",
-      /* "src/vendors/isomorphic-git.ts"*/
     ],
     loader: {
       ".ttf": "file",
