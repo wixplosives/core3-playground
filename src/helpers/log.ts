@@ -1,3 +1,5 @@
+import { isPlainObject } from "./javascript";
+
 // eslint-disable-next-line no-console
 export const log = (message: unknown) => console.log(message);
 // eslint-disable-next-line no-console
@@ -14,5 +16,5 @@ export function errorToString(error: unknown): string {
 }
 
 function isErrorLike(error: unknown): error is Error {
-  return typeof error === "object" && error !== null && ("stack" in error || "message" in error);
+  return isPlainObject(error) && ("stack" in error || "message" in error);
 }

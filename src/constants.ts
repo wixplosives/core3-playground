@@ -11,6 +11,7 @@ export const defaultLibVersions: LibraryVersions = {
   sass: "1.63.6", // sassVersion
   immutable: immutableVersion,
 };
+export const previewIframeHTMLIndex = "preview.html";
 
 export const monacoJsBundle = "vendors/monaco.js";
 export const monacoCssBundle = "vendors/monaco.css";
@@ -20,5 +21,6 @@ export const monacoHtmlWorkerBundle = "vendors/monaco-html-worker.js";
 export const monacoJsonWorkerBundle = "vendors/monaco-json-worker.js";
 
 export const schemaStoreCatalogURL = "https://www.schemastore.org/api/json/catalog.json";
-export const wixUnpkgURL = "https://static.parastorage.com/unpkg/";
 export const ignoredFileTreeDirectories: ReadonlySet<string> = new Set([".git"]);
+
+export const wixUnpkgURL = "https://static.parastorage.com/unpkg/";

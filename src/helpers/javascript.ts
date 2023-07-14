@@ -1,3 +1,7 @@
+export function isPlainObject(value: unknown): value is object {
+  return typeof value === "object" && value !== null;
+}
+
 export async function collectIntoArray<T>(asyncIter: AsyncIterable<T>): Promise<T[]> {
   const collected: T[] = [];
   for await (const item of asyncIter) {

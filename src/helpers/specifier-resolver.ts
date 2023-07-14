@@ -1,3 +1,4 @@
+import path from "@file-services/path";
 import type { PackageJson } from "type-fest";
 
 /**
@@ -428,4 +429,19 @@ function getFromParsedTemplateMap<T extends string | false>(
     }
   }
   return undefined;
+}
+
+export function createCachedResolver(resolver: AsyncSpecifierResolver): AsyncSpecifierResolver {
+  const cache = new Map<string, Promise<IResolutionOutput>>();
+  return (contextPath, specifier) => {
+    const key = `${contextPath}${path.sep}${specifier}`;
+    const cachedResolution = cache.get(key);
+    if (cachedResolution) {
+      return cachedResolution;
+    } else {
+      const result = resolver(contextPath, specifier);
+      cache.set(key, result);
+      return result;
+    }
+  };
 }

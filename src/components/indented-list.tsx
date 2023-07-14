@@ -4,7 +4,7 @@ import classes from "./indented-list.module.css";
 export namespace IndentedList {
   export interface Props extends React.HTMLAttributes<HTMLDivElement> {
     items: readonly Item[];
-    onItemClick?: ((itemId: string, itemType: string) => unknown) | undefined;
+    onItemClick?: ((itemId: string, itemType: string, altKey: boolean) => unknown) | undefined;
   }
 
   export interface Item {
@@ -23,7 +23,7 @@ export const IndentedList = React.memo<IndentedList.Props>(({ items, onItemClick
       typeof event.target.dataset["id"] === "string" &&
       typeof event.target.dataset["type"] === "string"
     ) {
-      onItemClick?.(event.target.dataset["id"], event.target.dataset["type"]);
+      onItemClick?.(event.target.dataset["id"], event.target.dataset["type"], event.altKey);
     }
   };
 

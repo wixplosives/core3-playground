@@ -1,12 +1,12 @@
-import { Base64 } from "js-base64";
 import type ts from "typescript";
-
-interface SourceMapLike {
-  sources?: [string];
-}
-
-const sourceMapURLPrefix = `//# sourceMappingURL=`;
-const filePathSourceMapPrefix = `project://`;
+import { singlePackageModuleSystem } from "./package-evaluation";
+import {
+  filePathSourceMapPrefix,
+  hasSingleSource,
+  inlineJsSourceMap,
+  overrideSourceMapFilePath,
+  type SourceMapLike,
+} from "./source-maps";
 
 export function compileUsingTypescript(
   { transpileModule }: typeof ts,
@@ -22,33 +22,142 @@ export function compileUsingTypescript(
   if (sourceMapText) {
     const originalSourceMap = JSON.parse(sourceMapText) as SourceMapLike;
     const sourceFilePath = filePathSourceMapPrefix + filePath;
-    const fixedSourceMap = hasSingleOrigin(originalSourceMap)
+    const fixedSourceMap = hasSingleSource(originalSourceMap)
       ? overrideSourceMapFilePath(originalSourceMap, sourceFilePath)
       : originalSourceMap;
-    return inlineSourceMap(fixedSourceMap, outputText);
+    return inlineJsSourceMap(fixedSourceMap, outputText);
   }
   return outputText;
 }
 
-function inlineSourceMap(sourceMap: SourceMapLike, outputText: string): string {
-  const sourceMappingURLIdx = outputText.lastIndexOf(sourceMapURLPrefix);
-  if (sourceMappingURLIdx !== -1) {
-    const base64SourceMapUri = createBase64DataURI(JSON.stringify(sourceMap));
-    return outputText.slice(0, sourceMappingURLIdx + sourceMapURLPrefix.length) + base64SourceMapUri;
+export type ExtractionMode = "production" | "development";
+
+/**
+ * accepts a file to analyze and returns all static/dynamic imports and requires
+ */
+export function extractModuleRequests(
+  {
+    SyntaxKind,
+    isCallExpression,
+    isImportDeclaration,
+    isExportDeclaration,
+    isExportAssignment,
+    canHaveModifiers,
+    getModifiers,
+    forEachChild,
+    isStringLiteral,
+    isIdentifier,
+    isIfStatement,
+    isBinaryExpression,
+    isPropertyAccessExpression,
+  }: typeof ts,
+  sourceFile: ts.SourceFile,
+  mode: ExtractionMode = "development",
+): {
+  specifiers: string[];
+  hasESM: boolean;
+} {
+  const { ImportKeyword, ExportKeyword } = SyntaxKind;
+
+  function isRequireIdentifier(expression: ts.Expression): expression is ts.Identifier {
+    return isIdentifier(expression) && expression.text === "require";
   }
-  return outputText;
+
+  function isNodeEnvLookup(node: ts.Node): node is ts.PropertyAccessExpression {
+    return (
+      isPropertyAccessExpression(node) &&
+      node.name.text === "NODE_ENV" &&
+      isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === "env" &&
+      isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === "process"
+    );
+  }
+  function isExportedNode(node: ts.Node): boolean {
+    if (canHaveModifiers(node)) {
+      const modifiers = getModifiers(node);
+      if (modifiers) {
+        for (const { kind } of modifiers) {
+          if (kind === ExportKeyword) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  const specifiers: string[] = [];
+  let hasESM = false;
+  function isDynamicImportKeyword({ kind }: ts.Expression) {
+    return kind === ImportKeyword;
+  }
+
+  const dynamicImportsFinder = (node: ts.Node): void => {
+    if (isCallExpression(node)) {
+      const isDynamicImportNode = isDynamicImportKeyword(node.expression);
+      hasESM ||= isDynamicImportNode;
+      if (
+        (isDynamicImportNode || isRequireIdentifier(node.expression)) &&
+        node.arguments.length === 1 &&
+        isStringLiteral(node.arguments[0]!)
+      ) {
+        const [{ text }] = node.arguments;
+        specifiers.push(text);
+        return;
+      }
+    }
+    forEachChild(node, dynamicImportsFinder);
+  };
+
+  const importsFinder = (node: ts.Node) => {
+    const isImportOrExport = isImportDeclaration(node) || isExportDeclaration(node);
+    hasESM ||= isImportOrExport;
+    if (isImportOrExport && node.moduleSpecifier && isStringLiteral(node.moduleSpecifier)) {
+      const originalTarget = node.moduleSpecifier.text;
+      specifiers.push(originalTarget);
+      return;
+    } else if (isExportAssignment(node)) {
+      hasESM = true;
+    } else if (
+      isIfStatement(node) &&
+      isBinaryExpression(node.expression) &&
+      node.expression.operatorToken.kind === SyntaxKind.EqualsEqualsEqualsToken &&
+      isNodeEnvLookup(node.expression.left) &&
+      isStringLiteral(node.expression.right)
+    ) {
+      const visitTarget = node.expression.right.text === mode ? node.thenStatement : node.elseStatement;
+      if (visitTarget) {
+        forEachChild(visitTarget, dynamicImportsFinder);
+      }
+      return;
+    }
+
+    hasESM ||= isExportedNode(node);
+
+    // if not a static import/re-export, might be a dynamic import
+    // so run that recursive visitor on `node`
+    forEachChild(node, dynamicImportsFinder);
+  };
+
+  forEachChild(sourceFile, importsFinder);
+  return { specifiers, hasESM };
 }
 
-function overrideSourceMapFilePath(sourceMap: SourceMapLike, filePath: string): SourceMapLike {
-  const sourceMapCopy: SourceMapLike = { ...sourceMap };
-  sourceMapCopy.sources = [filePath];
-  return sourceMapCopy;
+export function evaluateTypescriptLib(typescriptURL: string, typescriptText: string) {
+  typescriptText = fixTypescriptBundle(typescriptText);
+  const typescriptModuleSystem = singlePackageModuleSystem("typescript", typescriptURL, typescriptText);
+  return typescriptModuleSystem.requireModule(typescriptURL) as typeof import("typescript");
 }
 
-function hasSingleOrigin({ sources }: SourceMapLike) {
-  return Array.isArray(sources) && sources.length === 1 && typeof sources[0] === "string";
-}
-
-function createBase64DataURI(value: string, mimeType = `application/json`): string {
-  return `data:${mimeType};base64,${Base64.encode(value)}`;
+function fixTypescriptBundle(typescriptBundleText: string) {
+  return (
+    typescriptBundleText
+      // remove broken typescript sourcemap
+      .replace(`\n//# sourceMappingURL=typescript.js.map`, ``)
+      // disable code causing caught exception
+      .replace(`const etwModulePath =`, `// const etwModulePath =`)
+      .replace(`var etwModulePath =`, `// var etwModulePath =`)
+      .replace(`require(etwModulePath);`, `void 0`)
+  );
 }
