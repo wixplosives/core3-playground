@@ -18,6 +18,7 @@ export async function createSassModule(
 ): Promise<string> {
   const parentDirectoryPath = path.dirname(filePath);
   const fileUrl = new URL(`file://` + encodeURI(filePath));
+  const start = performance.now();
   const { css } = await sass.compileStringAsync(fileContents, {
     importers: [
       {
@@ -41,6 +42,7 @@ export async function createSassModule(
       },
     ],
   });
+  performance.measure(`Transpile ${filePath} (to CSS)`, { start });
 
   const baseWithoutExt = path.basename(filePath, path.extname(filePath));
   return path.extname(baseWithoutExt) === ".module"

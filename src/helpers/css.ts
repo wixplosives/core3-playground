@@ -41,8 +41,9 @@ export async function createCssModule(
     generateScopedName,
   });
 
+  const start = performance.now();
   const { css } = await postcss(modulesPlugin).process(fileContents, { from: filePath });
-
+  performance.measure(`Transpile ${filePath} (as CSS Module)`, { start });
   return `${createStyleInjectModule(filePath, css)}
 module.exports = ${JSON.stringify(lastCompiledNamespaces[filePath] || {})};
 `;

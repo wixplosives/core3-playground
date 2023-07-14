@@ -134,10 +134,14 @@ async function calculateModuleGraph(
       const fileExtension = path.extname(filePath);
       if (isTypeScriptFile(fileExtension)) {
         const compiledContents = compileUsingTypescript(ts!, filePath, fileContents, compilerOptions);
+        const start = performance.now();
         const sourceFile = ts!.createSourceFile(filePath, compiledContents, ts!.ScriptTarget.Latest);
+        performance.measure(`Parse ${filePath} (compiled output)`, { start });
         return { compiledContents, requests: extractModuleRequests(ts!, sourceFile).specifiers };
       } else if (isJavaScriptFile(fileExtension)) {
+        const start = performance.now();
         const sourceFile = ts!.createSourceFile(filePath, fileContents, ts!.ScriptTarget.Latest);
+        performance.measure(`Parse ${filePath}`, { start });
         const { hasESM, specifiers } = extractModuleRequests(ts!, sourceFile);
         const withInlinedSourcemaps = await inlineExternalJsSourceMap(filePath, fileContents, fs, specifierResolver);
         const compiledContents = hasESM

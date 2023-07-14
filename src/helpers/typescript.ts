@@ -14,10 +14,12 @@ export function compileUsingTypescript(
   fileContents: string,
   compilerOptions: ts.CompilerOptions,
 ): string {
+  const start = performance.now();
   const { outputText, sourceMapText } = transpileModule(fileContents, {
     compilerOptions,
     fileName: filePath,
   });
+  performance.measure(`Transpile ${filePath}`, { start });
 
   if (sourceMapText) {
     const originalSourceMap = JSON.parse(sourceMapText) as SourceMapLike;
