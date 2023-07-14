@@ -1,4 +1,5 @@
-.codeEditor {
+.codeEditor,
+.preview {
   flex: 1;
 }
 

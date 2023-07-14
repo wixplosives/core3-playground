@@ -20,7 +20,7 @@ const buildOptions = {
   legalComments: "none",
   bundle: true,
   target: "es2022",
-  entryPoints: ["src/main.ts", "src/compilation-worker.ts"],
+  entryPoints: ["src/main.ts", "src/preview.ts", "src/compilation-worker.ts"],
   entryNames: "[name]",
   loader: {
     ".json": "json",

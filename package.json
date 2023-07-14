@@ -12,22 +12,25 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@file-services/commonjs": "^7.4.0",
     "@file-services/path": "^7.4.0",
-    "buffer": "^6.0.3",
+    "@wixc3/postcss-modules": "^6.1.1",
     "idb-keyval": "^6.2.1",
     "js-base64": "^3.7.5",
+    "mime": "^3.0.0",
     "monaco-editor": "^0.40.0",
+    "postcss": "^8.4.26",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
+    "@types/mime": "^3.0.1",
     "@types/node": "18",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/wicg-file-system-access": "^2020.9.6",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@wixc3/react-board": "^2.2.1",
     "esbuild": "^0.18.12",
     "esbuild-css-modules-plugin": "^2.7.1",
     "eslint": "^8.44.0",

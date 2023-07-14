@@ -6,6 +6,7 @@ import classes from "./editor.module.css";
 import { FileExplorer } from "./file-explorer";
 import { Grid } from "./grid";
 import { ImageViewer } from "./image-viewer";
+import { Preview } from "./preview";
 import { Sidebar } from "./sidebar";
 import { StatusBar } from "./status-bar";
 import { Tabs } from "./tabs";
@@ -27,9 +28,11 @@ export namespace Editor {
     savedProjectNames?: FileExplorer.Props["savedProjectNames"];
     onOpenSaved?: FileExplorer.Props["onOpenSaved"];
     onClearSaved?: FileExplorer.Props["onClearSaved"];
+    onPreviewLoad?: Preview.Props["onPreviewLoad"];
+    onPreviewClose?: Preview.Props["onPreviewClose"];
   }
 
-  export type OpenFile = OpenTextFile | OpenImageFile;
+  export type OpenFile = OpenTextFile | OpenImageFile | Preview;
 
   export interface OpenImageFile {
     type: "image-viewer";
@@ -41,6 +44,11 @@ export namespace Editor {
     type: "code-editor";
     filePath: string;
     fileContents: string;
+  }
+
+  export interface Preview {
+    type: "preview";
+    filePath: string;
   }
 }
 
@@ -56,6 +64,8 @@ export const Editor = React.memo<Editor.Props>(
     onOpenSaved,
     onClearSaved,
     onTabClose,
+    onPreviewLoad,
+    onPreviewClose,
   }) => {
     const tabs = useMemo(
       () =>
@@ -86,6 +96,15 @@ export const Editor = React.memo<Editor.Props>(
                 className={classes["imageViewer"]}
                 imageUrl={openFile.imageUrl}
                 filePath={openFile.filePath}
+                key={openFile.filePath}
+              />
+            )}
+            {openFile?.type === "preview" && (
+              <Preview
+                className={classes["preview"]}
+                filePath={openFile.filePath}
+                onPreviewLoad={onPreviewLoad}
+                onPreviewClose={onPreviewClose}
                 key={openFile.filePath}
               />
             )}

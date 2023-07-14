@@ -16,7 +16,10 @@ import { generateIndentedFsItems } from "./fs/async-fs-operations";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { imageMimeTypes } from "./helpers/dom";
 import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
+import type { Preview } from "./preview";
+import { createRPCIframe, type RPCIframe } from "./rpc/rpc-iframe";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
+import { getCoduxConfig } from "./helpers/codux";
 
 export class PlaygroundApp {
   private fs: BrowserFileSystem | undefined;
@@ -25,6 +28,7 @@ export class PlaygroundApp {
   private openDirectories = new Set<string>();
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
   private compilation?: RPCWorker<Compilation> | undefined;
+  private previews = new Map<string, RPCIframe<Preview>>();
 
   // passed to UI
   private openFiles: readonly Editor.OpenFile[] = [];
@@ -57,12 +61,46 @@ export class PlaygroundApp {
           onOpenSaved={this.onOpenSaved}
           onClearSaved={this.onClearSaved}
           onTabClose={this.onTabClose}
+          onPreviewLoad={this.registerPreview}
+          onPreviewClose={this.closePreview}
         />
       </React.StrictMode>,
     );
   }
 
-  private onFileTreeItemClick = async (itemId: string, itemType: string) => {
+  private registerPreview = async (filePath: string, iframe: HTMLIFrameElement) => {
+    const previewRPC = createRPCIframe<Preview>(iframe);
+    const existingRPC = this.previews.get(filePath);
+    if (existingRPC) {
+      existingRPC.close();
+    }
+    this.previews.set(filePath, previewRPC);
+
+    const coduxCodux = await getCoduxConfig(this.fs!, "/");
+    const boardGlobalSetupPath = coduxCodux?.boardGlobalSetup
+      ? await this.compilation?.api.resolveSpecifier(this.fs!.root, "/", coduxCodux.boardGlobalSetup)
+      : undefined;
+
+    const entryModules = boardGlobalSetupPath ? [boardGlobalSetupPath, filePath] : filePath;
+    const moduleGraph = await this.compilation?.api.calculateModuleGraph(this.fs!.root, entryModules);
+    if (moduleGraph && this.previews.get(filePath) === previewRPC) {
+      await previewRPC.api.evaluateAndRender(
+        moduleGraph,
+        filePath,
+        boardGlobalSetupPath ? boardGlobalSetupPath : undefined,
+      );
+    }
+  };
+
+  private closePreview = (filePath: string) => {
+    const previewRPC = this.previews.get(filePath);
+    if (previewRPC) {
+      previewRPC.close();
+      this.previews.delete(filePath);
+    }
+  };
+
+  private onFileTreeItemClick = async (itemId: string, itemType: string, altKey: boolean) => {
     if (itemType === "directory") {
       if (this.openDirectories.has(itemId)) {
         this.openDirectories.delete(itemId);
@@ -83,6 +121,8 @@ export class PlaygroundApp {
               filePath: itemId,
               imageUrl: URL.createObjectURL(new Blob([await this.fs.readFile(itemId)], { type: imageMimeType })),
             }
+          : altKey
+          ? { type: "preview", filePath: itemId }
           : {
               type: "code-editor",
               filePath: itemId,
