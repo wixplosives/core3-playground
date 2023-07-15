@@ -96,6 +96,10 @@ const falseModule = {
 };
 
 const markedErrorSymbol = Symbol("markedError");
+const evaluationErrorPrefix = "Failed evaluating: ";
+type MarkedEvaluationError = Error & {
+  [markedErrorSymbol]: boolean;
+};
 
 export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): ICommonJsModuleSystem {
   const { resolveFrom, dirname, readFileSync, globals = {}, loadModuleHook } = options;
@@ -186,9 +190,12 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       moduleFn(...Object.values(moduleBuiltins));
     } catch (e) {
       requireCache.delete(filePath);
-      if (e instanceof Error && !(markedErrorSymbol in e)) {
-        e.message = `Failed evaluating ${filePath}: ${e.message}`;
-        (e as Error & { [markedErrorSymbol]: boolean })[markedErrorSymbol] = true;
+      if (e instanceof Error) {
+        const alreadyMarked = markedErrorSymbol in e;
+        e.message = `${evaluationErrorPrefix}${filePath} -> ${
+          alreadyMarked ? e.message.slice(evaluationErrorPrefix.length) : e.message
+        }`;
+        (e as MarkedEvaluationError)[markedErrorSymbol] = true;
       }
       throw e;
     }
