@@ -101,10 +101,8 @@ async function inlineSourcesIntoSourceMap(
     sourceMap.sourcesContent ??= [];
     for (const [idx, source] of sourceMap.sources.entries()) {
       const { resolvedFile: resolvedSourcePath } = await resolver(mapFileContext, `./${source}`);
-      if (!resolvedSourcePath) {
-        continue;
-      }
-      sourceMap.sources[idx] = filePathSourceMapPrefix + resolvedSourcePath;
+      sourceMap.sources[idx] =
+        filePathSourceMapPrefix + (resolvedSourcePath ? resolvedSourcePath : path.join(mapFileContext, source));
       if (resolvedSourcePath && typeof sourceMap.sourcesContent[idx] !== "string") {
         sourceMap.sourcesContent[idx] = await fs.readTextFile(resolvedSourcePath);
       }
