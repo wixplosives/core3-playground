@@ -16,7 +16,12 @@ export type ModuleGraphNode = { compiledContents: string; resolvedRequests: Reso
  */
 export type ResolvedRequests = Map<string, SpecifierResolution>;
 
-type SpecifierResolution = string | false | undefined;
+export type SpecifierResolution = string | false | undefined;
+
+export interface AnalyzedModule {
+  compiledContents: string;
+  requests: string[];
+}
 
 export interface IDependencyResolverOptions {
   /**
@@ -25,7 +30,7 @@ export interface IDependencyResolverOptions {
    * @param assetKey unique identifier for an asset to extract from.
    * @returns list of dependency requests by the asset.
    */
-  extractRequests(filePath: string): Promise<{ compiledContents: string; requests: string[] }>;
+  analyzeModule(filePath: string): Promise<AnalyzedModule>;
 
   /**
    * Resolve a dependency request by an asset.
@@ -41,7 +46,7 @@ export interface IDependencyResolverOptions {
  * and another callbck to resolve such requests.
  */
 export function createModuleGraphResolver({
-  extractRequests,
+  analyzeModule,
   resolveRequest,
 }: IDependencyResolverOptions): DependencyResolver {
   return async (assetKey) => {
@@ -56,7 +61,7 @@ export function createModuleGraphResolver({
         continue;
       }
 
-      const { compiledContents, requests } = await extractRequests(currentAsset);
+      const { compiledContents, requests } = await analyzeModule(currentAsset);
       const resolvedRequests: ResolvedRequests = new Map();
       resolvedAssets.set(currentAsset, { compiledContents, resolvedRequests });
 
