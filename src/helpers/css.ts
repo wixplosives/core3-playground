@@ -34,7 +34,10 @@ export async function createCssModule(
         fs.readTextFile(path).then((fileContents) => callback(null, fileContents), callback);
       },
     },
-    resolve: async (specifier, fromFile) => (await resolver(path.dirname(fromFile), specifier)).resolvedFile as string,
+    resolve: async (specifier, fromFile) => {
+      const { resolvedFile } = await resolver(path.dirname(fromFile), specifier);
+      return resolvedFile ? resolvedFile : null;
+    },
     getJSON(filePath, namespaceInfo) {
       lastCompiledNamespaces[filePath] = namespaceInfo;
     },
@@ -44,6 +47,7 @@ export async function createCssModule(
   const start = performance.now();
   const { css } = await postcss(modulesPlugin).process(fileContents, { from: filePath });
   performance.measure(`Transpile ${filePath} (as CSS Module)`, { start });
+
   return `${createStyleInjectModule(filePath, css)}
 module.exports = ${JSON.stringify(lastCompiledNamespaces[filePath] || {})};
 `;
