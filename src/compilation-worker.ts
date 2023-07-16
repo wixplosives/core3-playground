@@ -1,9 +1,11 @@
 import path from "@file-services/path";
+import postcss from "postcss";
+import postcssSCSS from "postcss-scss";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
-import { createCssModule, createStyleInjectModule } from "./helpers/css";
+import { createCssModule, createCssSpecifierResolver, createStyleInjectModule, inlineCSSUrls } from "./helpers/css";
 import { fetchText } from "./helpers/dom";
 import { createModuleGraphResolver, type AnalyzedModule, type ModuleGraph } from "./helpers/module-graph-resolver";
-import { createSassModule, createSassSpecifierResolver, evaluateSassLib } from "./helpers/sass";
+import { compileUsingSass, createSassSpecifierResolver, evaluateSassLib } from "./helpers/sass";
 import { inlineExternalCssSourceMap, inlineExternalJsSourceMap } from "./helpers/source-maps";
 import {
   createAsyncSpecifierResolver,
@@ -126,7 +128,13 @@ async function calculateModuleGraph(
     createAsyncSpecifierResolver({ fs: resolutionFs, ...resolverOptions }),
   );
 
-  const sassResolver = createCachedResolver(
+  const cssAssetResolver = createCachedResolver(
+    createCssSpecifierResolver({
+      fs: resolutionFs,
+    }),
+  );
+
+  const sassModuleResolver = createCachedResolver(
     createSassSpecifierResolver({
       fs: resolutionFs,
     }),
@@ -160,26 +168,55 @@ async function calculateModuleGraph(
     },
   };
 
+  async function readCssAndInlineAssets(filePath: string, syntax?: postcss.Syntax): Promise<string> {
+    const contextPath = path.dirname(filePath);
+    const fileContents = await fs.readTextFile(filePath);
+
+    const start = performance.now();
+    const { root } = postcss().process(fileContents, { from: filePath, syntax: syntax! });
+    performance.measure(`Parse ${filePath}`, { start });
+
+    await inlineCSSUrls(contextPath, root, cssAssetResolver, fs);
+    return root.toString(syntax?.stringify);
+  }
+
   const cssAnalyzer: ModuleAnalyzer = {
     test: isCssFile,
     async analyze(filePath, fs, fileExtension) {
-      const fileContents = await fs.readTextFile(filePath);
       const baseWithoutExt = path.basename(filePath, fileExtension);
       const isCssModule = path.extname(baseWithoutExt) === ".module";
-      const withInlinedSourcemaps = await inlineExternalCssSourceMap(filePath, fileContents, fs, specifierResolver);
+
+      const withInlinedSourcemaps = await inlineExternalCssSourceMap(
+        filePath,
+        await readCssAndInlineAssets(filePath),
+        fs,
+        specifierResolver,
+      );
+
       const compiledContents = isCssModule
-        ? await createCssModule(filePath, withInlinedSourcemaps, fs, specifierResolver)
+        ? await createCssModule(filePath, withInlinedSourcemaps, readCssAndInlineAssets, specifierResolver)
         : createStyleInjectModule(filePath, withInlinedSourcemaps);
-      return isCssModule ? { compiledContents, requests: [] } : { compiledContents, requests: [] };
+
+      return { compiledContents, requests: [] };
     },
   };
 
+  const readSassFileContents = (filePath: string) => readCssAndInlineAssets(filePath, postcssSCSS);
+
   const sassAnalyzer: ModuleAnalyzer = {
     test: isSassFile,
-    async analyze(filePath, fs) {
-      const fileContents = await fs.readTextFile(filePath);
+    async analyze(filePath, _fs, fileExtension) {
+      const css = await compileUsingSass(sass!, filePath, readSassFileContents, sassModuleResolver);
+
+      const baseWithoutExt = path.basename(filePath, fileExtension);
+      const isSassModule = path.extname(baseWithoutExt) === ".module";
+
+      const compiledContents = isSassModule
+        ? await createCssModule(filePath, css, readCssAndInlineAssets, cssAssetResolver)
+        : createStyleInjectModule(filePath, css);
+
       return {
-        compiledContents: await createSassModule(sass!, filePath, fileContents, fs, specifierResolver, sassResolver),
+        compiledContents,
         requests: [],
       };
     },

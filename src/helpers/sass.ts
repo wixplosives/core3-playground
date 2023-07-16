@@ -1,35 +1,32 @@
 import path from "@file-services/path";
-import type { BrowserFileSystem } from "../fs/browser-file-system";
-import { createCssModule, createStyleInjectModule } from "./css";
+import { singlePackageModuleSystem } from "./package-evaluation";
+import { filePathSourceMapPrefix } from "./source-maps";
 import {
   createAsyncSpecifierResolver,
   type AsyncSpecifierResolver,
   type IAsyncSpecifierResolverOptions,
 } from "./specifier-resolver";
-import { singlePackageModuleSystem } from "./package-evaluation";
 
-export async function createSassModule(
+export async function compileUsingSass(
   sass: typeof import("sass"),
   filePath: string,
-  fileContents: string,
-  fs: BrowserFileSystem,
-  cssResolver: AsyncSpecifierResolver,
+  getFileContents: (filePath: string) => Promise<string>,
   sassResolver: AsyncSpecifierResolver,
 ): Promise<string> {
   const parentDirectoryPath = path.dirname(filePath);
   const fileUrl = new URL(`file://` + encodeURI(filePath));
   const start = performance.now();
-  const { css } = await sass.compileStringAsync(fileContents, {
+  const { css } = await sass.compileStringAsync(await getFileContents(filePath), {
     importers: [
       {
         async load(canonicalUrl) {
           const filePath = decodeURI(canonicalUrl.pathname);
-          const contents = await fs.readTextFile(filePath);
           const fileExtension = path.extname(filePath);
 
           return {
-            contents,
+            contents: await getFileContents(filePath),
             syntax: sassSyntaxFromExt(fileExtension),
+            sourceMapUrl: new URL(filePathSourceMapPrefix + encodeURI(filePath)),
           };
         },
         async canonicalize(specifier) {
@@ -44,10 +41,7 @@ export async function createSassModule(
   });
   performance.measure(`Transpile ${filePath} (to CSS)`, { start });
 
-  const baseWithoutExt = path.basename(filePath, path.extname(filePath));
-  return path.extname(baseWithoutExt) === ".module"
-    ? await createCssModule(filePath, css, fs, cssResolver)
-    : createStyleInjectModule(filePath, css);
+  return css;
 }
 
 export interface ISassResolutionOptions extends IAsyncSpecifierResolverOptions {
@@ -60,14 +54,13 @@ export const createSassSpecifierResolver = (options: ISassResolutionOptions): As
     // .css is also picked up by sass (when using @import)
     extensions: [".scss", ".sass", ".css"],
   });
-  const { fs, includePaths = [] } = options;
+  const { includePaths = [] } = options;
 
-  return async (filePath, request) => {
+  return async (contextPath, request) => {
     // we try several request aliases, so make sure we have a total list of visited paths for cache invalidation
     const allVisitedPaths = new Set<string>();
 
-    const directoryPath = fs.dirname(filePath);
-    const possibleContexts = [directoryPath, ...includePaths];
+    const possibleContexts = [contextPath, ...includePaths];
     for (const possibleRequest of getPossibleRequests(request)) {
       for (const contextPath of possibleContexts) {
         const { resolvedFile, visitedPaths } = await resolver(contextPath, possibleRequest);
@@ -103,7 +96,7 @@ function sassSyntaxFromExt(fileExtension: string): import("sass").Syntax {
   }
 }
 
-function* getPossibleRequests(request: string): Generator<string, void, unknown> {
+function* getPossibleRequests(request: string): Generator<string> {
   if (
     !request ||
     request.startsWith("data:") ||
