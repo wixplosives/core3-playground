@@ -170,6 +170,7 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
 
   const globalForSass = Object.create(globalThis) as typeof globalThis & { _cliPkgExports?: [{ load: SassLoadFn }?] };
   const processForSass = {
+    env: {},
     stdout: {
       isTTY: false,
     },
