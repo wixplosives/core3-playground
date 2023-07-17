@@ -1,6 +1,8 @@
 import path from "@file-services/path";
+import { createStore, get, set } from "idb-keyval";
 import postcss from "postcss";
 import postcssSCSS from "postcss-scss";
+import { compilationCacheStoreName, playgroundDbName } from "./constants";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { createCssModule, createCssSpecifierResolver, createStyleInjectModule, inlineCSSUrls } from "./helpers/css";
 import { fetchText } from "./helpers/dom";
@@ -112,7 +114,9 @@ async function calculateModuleGraph(
     sourceMap: true,
     inlineSources: true,
   };
-  const fs = createBrowserFileSystem(rootHandle);
+  const fileHandleCache = new Map<string, FileSystemFileHandle>();
+  const directoryHandleCache = new Map<string, FileSystemDirectoryHandle>();
+  const fs = createBrowserFileSystem(rootHandle, fileHandleCache, directoryHandleCache);
   const resolutionFs: IAsyncResolutionFileSystem = {
     ...fs,
     realpath(path) {
@@ -140,6 +144,10 @@ async function calculateModuleGraph(
     }),
   );
 
+  const compilationCacheStore = createStore(playgroundDbName, compilationCacheStoreName);
+  const textDecoder = new TextDecoder();
+  const packageVersions = new Map<string, string>();
+
   const typescriptAnalyzer: ModuleAnalyzer = {
     test: isTypeScriptFile,
     async analyze(filePath, fs) {
@@ -152,10 +160,47 @@ async function calculateModuleGraph(
     },
   };
 
+  async function getPackageVersion(packagePath: string): Promise<string | undefined> {
+    const cachedVersion = packageVersions.get(packagePath);
+    if (cachedVersion) {
+      return cachedVersion;
+    }
+    const packageJsonPath = path.join(packagePath, "package.json");
+    if (await fs.fileExists(packageJsonPath)) {
+      const { version: packageVersion } = (await fs.readJSONFile(packageJsonPath)) as { version: string };
+      packageVersions.set(packagePath, packageVersion);
+      return packageVersion;
+    }
+    return undefined;
+  }
+
+  async function getCacheKey(filePath: string): Promise<string | undefined> {
+    const nodeModulesFragment = "/node_modules/";
+    const nodeModulesIdx = filePath.lastIndexOf(nodeModulesFragment);
+    if (nodeModulesIdx === -1) {
+      return;
+    }
+    const packagePathIdx = nodeModulesIdx + nodeModulesFragment.length;
+    const nodeModulesPath = filePath.slice(0, packagePathIdx);
+    const packageFilePath = filePath.slice(packagePathIdx);
+    const packageName = getNameFromPackagePath(packageFilePath);
+    const packagePath = path.join(nodeModulesPath, packageName);
+    const packageVersion = await getPackageVersion(packagePath);
+    return packageVersion ? `${packageName}@${packageVersion}/${path.relative(packagePath, filePath)}` : undefined;
+  }
+
   const javascriptAnalyzer: ModuleAnalyzer = {
     test: isJavaScriptFile,
     async analyze(filePath, fs) {
-      const fileContents = await fs.readTextFile(filePath);
+      const fileRawContents = await fs.readFile(filePath);
+      const cacheKey = await getCacheKey(filePath);
+      if (cacheKey) {
+        const cachedModule = await get<AnalyzedModule>(cacheKey, compilationCacheStore);
+        if (cachedModule) {
+          return cachedModule;
+        }
+      }
+      const fileContents = textDecoder.decode(fileRawContents);
       const start = performance.now();
       const sourceFile = ts!.createSourceFile(filePath, fileContents, ts!.ScriptTarget.Latest);
       performance.measure(`Parse ${filePath}`, { start });
@@ -164,7 +209,12 @@ async function calculateModuleGraph(
       const compiledContents = hasESM
         ? compileUsingTypescript(ts!, filePath, withInlinedSourcemaps, { ...compilerOptions, sourceMap: false })
         : withInlinedSourcemaps;
-      return { compiledContents, requests: specifiers };
+      const analyzedModule: AnalyzedModule = { compiledContents, requests: specifiers };
+
+      if (cacheKey) {
+        await set(cacheKey, analyzedModule, compilationCacheStore);
+      }
+      return analyzedModule;
     },
   };
 
@@ -279,4 +329,8 @@ function isCssFile(fileExtension: string) {
 
 function isSassFile(fileExtension: string) {
   return fileExtension === ".scss" || fileExtension === ".sass";
+}
+function getNameFromPackagePath(packageFilePath: string): string {
+  const [maybeScope = "", maybeName = ""] = packageFilePath.split("/");
+  return maybeScope.startsWith("@") ? `${maybeScope}/${maybeName}` : maybeScope;
 }

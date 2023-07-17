@@ -1,12 +1,16 @@
 import path from "@file-services/path";
-import type { AsyncFileSystem, FileSystemDirectoryItem, FileSystemFileItem } from "./async-fs-api";
 import { ignoreRejections } from "../helpers/javascript";
+import type { AsyncFileSystem, FileSystemDirectoryItem, FileSystemFileItem } from "./async-fs-api";
 
 export interface BrowserFileSystem extends AsyncFileSystem {
   root: FileSystemDirectoryHandle;
 }
 
-export function createBrowserFileSystem(rootDirectoryHandle: FileSystemDirectoryHandle): BrowserFileSystem {
+export function createBrowserFileSystem(
+  rootDirectoryHandle: FileSystemDirectoryHandle,
+  fileHandleCache?: Map<string, FileSystemFileHandle | undefined>,
+  directoryHandleCache?: Map<string, FileSystemDirectoryHandle | undefined>,
+): BrowserFileSystem {
   return {
     root: rootDirectoryHandle,
     async statFile(filePath) {
@@ -33,7 +37,7 @@ export function createBrowserFileSystem(rootDirectoryHandle: FileSystemDirectory
       return !!fileHandle;
     },
     async directoryExists(directoryPath) {
-      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath);
+      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath, directoryHandleCache);
       return !!directoryHandle;
     },
     async openFile(filePath) {
@@ -41,7 +45,7 @@ export function createBrowserFileSystem(rootDirectoryHandle: FileSystemDirectory
       return createFileItem(fileHandle, filePath);
     },
     async openDirectory(directoryPath) {
-      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath);
+      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath, directoryHandleCache);
       if (!directoryHandle) {
         throw new Error(`cannot get directory handle for ${directoryPath}`);
       }
@@ -54,14 +58,13 @@ export function createBrowserFileSystem(rootDirectoryHandle: FileSystemDirectory
     const file = await fileHandle.getFile();
     return file.text();
   }
-}
-
-async function getEnsuredFileHandle(rootDirectoryHandle: FileSystemDirectoryHandle, filePath: string) {
-  const fileHandle = await getDeepFileHandle(rootDirectoryHandle, filePath);
-  if (!fileHandle) {
-    throw new Error(`cannot get file handle for ${filePath}`);
+  async function getEnsuredFileHandle(rootDirectoryHandle: FileSystemDirectoryHandle, filePath: string) {
+    const fileHandle = await getDeepFileHandle(rootDirectoryHandle, filePath, fileHandleCache, directoryHandleCache);
+    if (!fileHandle) {
+      throw new Error(`cannot get file handle for ${filePath}`);
+    }
+    return fileHandle;
   }
-  return fileHandle;
 }
 
 function createFileItem(fileHandle: FileSystemFileHandle, filePath: string): FileSystemFileItem {
@@ -146,33 +149,55 @@ async function* readDirectoryHandleSorted(directoryHandle: FileSystemDirectoryHa
 async function getDeepFileHandle(
   rootDirectoryHandle: FileSystemDirectoryHandle,
   filePath: string,
+  fileHandleCache?: Map<string, FileSystemFileHandle | undefined>,
+  directoryHandleCache?: Map<string, FileSystemDirectoryHandle | undefined>,
 ): Promise<FileSystemFileHandle | undefined> {
+  if (fileHandleCache?.has(filePath)) {
+    return fileHandleCache.get(filePath);
+  }
   const fileBasename = path.basename(filePath);
   const parentPath = path.dirname(filePath);
-  const parentHandle = await getDeepDirectoryHandle(rootDirectoryHandle, parentPath);
-  return await ignoreRejections(parentHandle?.getFileHandle(fileBasename));
+  const parentHandle = await getDeepDirectoryHandle(rootDirectoryHandle, parentPath, directoryHandleCache);
+  const fileHandle = await ignoreRejections(parentHandle?.getFileHandle(fileBasename));
+  fileHandleCache?.set(filePath, fileHandle);
+  return fileHandle;
 }
 
 async function getDeepDirectoryHandle(
   rootDirectoryHandle: FileSystemDirectoryHandle,
   directoryPath: string,
+  directoryHandleCache?: Map<string, FileSystemDirectoryHandle | undefined>,
 ): Promise<FileSystemDirectoryHandle | undefined> {
+  if (directoryHandleCache?.has(directoryPath)) {
+    return directoryHandleCache.get(directoryPath);
+  }
   const directoryChain = directoryPath.split("/");
-  let currentDirectoryHandle = rootDirectoryHandle;
+  let currentDirectoryHandle: FileSystemDirectoryHandle | undefined = rootDirectoryHandle;
+  let currentDirectoryPath = "/";
   const lastIdx = directoryChain.length - 1;
   for (const [idx, pathName] of directoryChain.entries()) {
     try {
       if (pathName !== "" && pathName !== ".") {
-        currentDirectoryHandle = await currentDirectoryHandle.getDirectoryHandle(pathName);
+        currentDirectoryPath = path.join(currentDirectoryPath, pathName);
+        currentDirectoryHandle = directoryHandleCache?.has(currentDirectoryPath)
+          ? directoryHandleCache.get(currentDirectoryPath)
+          : await currentDirectoryHandle.getDirectoryHandle(pathName);
+        directoryHandleCache?.set(currentDirectoryPath, currentDirectoryHandle);
+        if (!currentDirectoryHandle) {
+          break;
+        }
       }
       if (idx === lastIdx) {
-        return currentDirectoryHandle;
+        break;
       }
+      directoryPath;
     } catch {
-      return undefined;
+      currentDirectoryHandle = undefined;
+      break;
     }
   }
-  return undefined;
+  directoryHandleCache?.set(currentDirectoryPath, currentDirectoryHandle);
+  return currentDirectoryHandle;
 }
 
 function safeJSONParse(filePath: string, fileContents: string) {
