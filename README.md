@@ -32,4 +32,24 @@ code playground, client-only, web application
 ## rpc
 
 - isolated, tiny implementation of fully-typed, proxy-based rpc
-- helper to create web workers that use this to communicate
+- helpers to create web workers or iframes that use this to communicate
+
+## code execution
+
+- supports execution of ts/js files within project
+- supports preview of Codux boards
+- compilation worker supports:
+  - typescript
+  - javascript
+  - css (+modules)
+  - sass (+modules)
+  - raw assets
+- uses custom in-browser commonjs module system to evaluate code in a sandboxed iframe
+- uses project's versions of typescript/sass
+- loads sourcemaps, inlines sources into them, and inlines them to evaluated code
+- evaluated files can be seen in devtools under `iframe` -> `project://<file-path>`
+- caches compiled modules from `node_modules` packages to indexeddb
+
+# license
+
+MIT
