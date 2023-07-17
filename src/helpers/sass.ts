@@ -168,11 +168,27 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
     children: [],
   });
 
+  const globalForSass = Object.create(globalThis) as typeof globalThis & { _cliPkgExports?: [{ load: SassLoadFn }?] };
+  const processForSass = {
+    stdout: {
+      isTTY: false,
+    },
+  };
+  Object.defineProperty(globalForSass, "process", {
+    get() {
+      return processForSass;
+    },
+    set() {
+      return undefined;
+    },
+  });
+  sassModuleSystem.globals["global"] = globalForSass;
+  sassModuleSystem.globals["globalThis"] = globalForSass;
+
   const sassExports = sassModuleSystem.requireModule(sassURL) as {
     load: SassLoadFn;
   };
-  const load =
-    sassExports.load ?? (globalThis as unknown as { _cliPkgExports: [{ load: SassLoadFn }] })?._cliPkgExports[0]?.load;
+  const load = sassExports.load ?? globalForSass._cliPkgExports?.[0]?.load;
   const sassLib = {} as unknown as typeof import("sass");
   load({ util: { inspect: {} }, immutable }, sassLib);
   return "info" in sassLib ? sassLib : (sassExports as unknown as typeof import("sass"));
