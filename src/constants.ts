@@ -3,6 +3,8 @@ import { version as tsVersion } from "typescript/package.json";
 import { version as immutableVersion } from "immutable/package.json";
 import type { LibraryVersions } from "./compilation-worker";
 
+export const playgroundDbName = "core3-playground";
+export const compilationCacheStoreName = "compilation-cache";
 export const openProjectsIDBKey = "playground-projects";
 export const compilationWorkerName = "Compilation";
 export const compilationBundleName = "compilation-worker.js";
