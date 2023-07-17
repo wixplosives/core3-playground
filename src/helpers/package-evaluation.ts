@@ -11,7 +11,7 @@ export function singlePackageModuleSystem(packageName: string, packageURL: strin
     },
     readFileSync(path) {
       if (path === packageURL) {
-        return packageLibText;
+        return `${packageLibText}\n//# sourceURL=${packageURL}`;
       } else {
         throw new Error(`Unexpected file path "${path}" during ${packageName} evaluation`);
       }
