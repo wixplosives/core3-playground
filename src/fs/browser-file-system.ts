@@ -14,7 +14,7 @@ export function createBrowserFileSystem(
   return {
     root: rootDirectoryHandle,
     async statFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(rootDirectoryHandle, filePath);
+      const fileHandle = await getEnsuredFileHandle(filePath);
       const file = await fileHandle.getFile();
       return {
         size: file.size,
@@ -22,7 +22,7 @@ export function createBrowserFileSystem(
       };
     },
     async readFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(rootDirectoryHandle, filePath);
+      const fileHandle = await getEnsuredFileHandle(filePath);
       const file = await fileHandle.getFile();
       const arrayBuffer = await file.arrayBuffer();
       return new Uint8Array(arrayBuffer);
@@ -33,19 +33,19 @@ export function createBrowserFileSystem(
       return safeJSONParse(filePath, fileContents);
     },
     async fileExists(filePath) {
-      const fileHandle = await getDeepFileHandle(rootDirectoryHandle, filePath);
+      const fileHandle = await getFileHandle(filePath);
       return !!fileHandle;
     },
     async directoryExists(directoryPath) {
-      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath, directoryHandleCache);
+      const directoryHandle = await getDirectoryHandle(directoryPath);
       return !!directoryHandle;
     },
     async openFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(rootDirectoryHandle, filePath);
+      const fileHandle = await getEnsuredFileHandle(filePath);
       return createFileItem(fileHandle, filePath);
     },
     async openDirectory(directoryPath) {
-      const directoryHandle = await getDeepDirectoryHandle(rootDirectoryHandle, directoryPath, directoryHandleCache);
+      const directoryHandle = await getDirectoryHandle(directoryPath);
       if (!directoryHandle) {
         throw new Error(`cannot get directory handle for ${directoryPath}`);
       }
@@ -54,16 +54,44 @@ export function createBrowserFileSystem(
   };
 
   async function readTextFile(filePath: string) {
-    const fileHandle = await getEnsuredFileHandle(rootDirectoryHandle, filePath);
+    const fileHandle = await getEnsuredFileHandle(filePath);
     const file = await fileHandle.getFile();
     return file.text();
   }
-  async function getEnsuredFileHandle(rootDirectoryHandle: FileSystemDirectoryHandle, filePath: string) {
-    const fileHandle = await getDeepFileHandle(rootDirectoryHandle, filePath, fileHandleCache, directoryHandleCache);
+
+  async function getEnsuredFileHandle(filePath: string) {
+    const fileHandle = await getFileHandle(filePath);
     if (!fileHandle) {
       throw new Error(`cannot get file handle for ${filePath}`);
     }
     return fileHandle;
+  }
+
+  async function getFileHandle(filePath: string): Promise<FileSystemFileHandle | undefined> {
+    if (fileHandleCache?.has(filePath)) {
+      return fileHandleCache.get(filePath);
+    }
+    const parentPath = path.dirname(filePath);
+    const parentHandle = await getDirectoryHandle(parentPath);
+    const fileName = path.basename(filePath);
+    const fileHandle = await ignoreRejections(parentHandle?.getFileHandle(fileName));
+    fileHandleCache?.set(filePath, fileHandle);
+    return fileHandle;
+  }
+
+  async function getDirectoryHandle(directoryPath: string): Promise<FileSystemDirectoryHandle | undefined> {
+    if (directoryHandleCache?.has(directoryPath)) {
+      return directoryHandleCache.get(directoryPath);
+    }
+    const parentPath = path.dirname(directoryPath);
+    if (parentPath === directoryPath) {
+      return rootDirectoryHandle;
+    }
+    const parentHandle = await getDirectoryHandle(parentPath);
+    const directoryName = path.basename(directoryPath);
+    const directoryHandle = await ignoreRejections(parentHandle?.getDirectoryHandle(directoryName));
+    directoryHandleCache?.set(directoryPath, directoryHandle);
+    return directoryHandle;
   }
 }
 
@@ -144,60 +172,6 @@ async function* readDirectoryHandleSorted(directoryHandle: FileSystemDirectoryHa
 
   yield* directories;
   yield* files;
-}
-
-async function getDeepFileHandle(
-  rootDirectoryHandle: FileSystemDirectoryHandle,
-  filePath: string,
-  fileHandleCache?: Map<string, FileSystemFileHandle | undefined>,
-  directoryHandleCache?: Map<string, FileSystemDirectoryHandle | undefined>,
-): Promise<FileSystemFileHandle | undefined> {
-  if (fileHandleCache?.has(filePath)) {
-    return fileHandleCache.get(filePath);
-  }
-  const fileBasename = path.basename(filePath);
-  const parentPath = path.dirname(filePath);
-  const parentHandle = await getDeepDirectoryHandle(rootDirectoryHandle, parentPath, directoryHandleCache);
-  const fileHandle = await ignoreRejections(parentHandle?.getFileHandle(fileBasename));
-  fileHandleCache?.set(filePath, fileHandle);
-  return fileHandle;
-}
-
-async function getDeepDirectoryHandle(
-  rootDirectoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string,
-  directoryHandleCache?: Map<string, FileSystemDirectoryHandle | undefined>,
-): Promise<FileSystemDirectoryHandle | undefined> {
-  if (directoryHandleCache?.has(directoryPath)) {
-    return directoryHandleCache.get(directoryPath);
-  }
-  const directoryChain = directoryPath.split("/");
-  let currentDirectoryHandle: FileSystemDirectoryHandle | undefined = rootDirectoryHandle;
-  let currentDirectoryPath = "/";
-  const lastIdx = directoryChain.length - 1;
-  for (const [idx, pathName] of directoryChain.entries()) {
-    try {
-      if (pathName !== "" && pathName !== ".") {
-        currentDirectoryPath = path.join(currentDirectoryPath, pathName);
-        currentDirectoryHandle = directoryHandleCache?.has(currentDirectoryPath)
-          ? directoryHandleCache.get(currentDirectoryPath)
-          : await currentDirectoryHandle.getDirectoryHandle(pathName);
-        directoryHandleCache?.set(currentDirectoryPath, currentDirectoryHandle);
-        if (!currentDirectoryHandle) {
-          break;
-        }
-      }
-      if (idx === lastIdx) {
-        break;
-      }
-      directoryPath;
-    } catch {
-      currentDirectoryHandle = undefined;
-      break;
-    }
-  }
-  directoryHandleCache?.set(currentDirectoryPath, currentDirectoryHandle);
-  return currentDirectoryHandle;
 }
 
 function safeJSONParse(filePath: string, fileContents: string) {
