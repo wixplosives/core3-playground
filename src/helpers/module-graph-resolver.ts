@@ -27,7 +27,7 @@ export interface AnalyzedModule {
   requests: string[];
 }
 
-export interface IDependencyResolverOptions {
+export interface ModuleGraphResolverOptions {
   /**
    * Extracts a dependency requests list of an asset.
    *
@@ -52,44 +52,54 @@ export interface IDependencyResolverOptions {
 export function createModuleGraphResolver({
   analyzeModule,
   resolveRequest,
-}: IDependencyResolverOptions): ModuleGraphResolver {
-  const analyzeAndResolve = async (filePath: string): Promise<[string, ModuleGraphNode]> => {
-    const { compiledContents, requests } = await analyzeModule(filePath);
-    const resolvedRequests: ResolvedRequests = new Map();
-
-    for (const request of requests) {
-      if (resolvedRequests.has(request)) {
-        continue; // already resolved this request
-      }
-      const resolvedRequest = await resolveRequest(filePath, request);
-      resolvedRequests.set(request, resolvedRequest);
-    }
-    return [filePath, { compiledContents, resolvedRequests }];
-  };
-
+}: ModuleGraphResolverOptions): ModuleGraphResolver {
   return async (entryFilePaths) => {
     const moduleGraph = new Map<string, ModuleGraphNode>();
+    const workInProgress = new Map<string, Promise<[string, ModuleGraphNode]>>();
 
     entryFilePaths = Array.isArray(entryFilePaths) ? entryFilePaths : [entryFilePaths];
-    const workInProgress = new Map<string, Promise<[string, ModuleGraphNode]>>(
-      entryFilePaths.map((filePath) => [filePath, analyzeAndResolve(filePath)]),
-    );
-
-    while (workInProgress.size > 0) {
+    for (const entryFilePath of entryFilePaths) {
+      workInProgress.set(
+        entryFilePath,
+        analyzeAndResolve(entryFilePath, analyzeModule, resolveRequest, moduleGraph, workInProgress),
+      );
+    }
+    while (workInProgress.size) {
       const [filePath, graphNode] = await Promise.race(workInProgress.values());
       workInProgress.delete(filePath);
       moduleGraph.set(filePath, graphNode);
-      for (const resolvedFilePath of graphNode.resolvedRequests.values()) {
-        if (
-          typeof resolvedFilePath === "string" &&
-          !moduleGraph.has(resolvedFilePath) &&
-          !workInProgress.has(resolvedFilePath)
-        ) {
-          workInProgress.set(resolvedFilePath, analyzeAndResolve(resolvedFilePath));
-        }
-      }
     }
 
     return moduleGraph;
   };
+}
+
+async function analyzeAndResolve(
+  filePath: string,
+  analyzeModule: ModuleGraphResolverOptions["analyzeModule"],
+  resolveRequest: ModuleGraphResolverOptions["resolveRequest"],
+  moduleGraph: ModuleGraph,
+  workInProgress: Map<string, Promise<[string, ModuleGraphNode]>>,
+): Promise<[string, ModuleGraphNode]> {
+  const { compiledContents, requests } = await analyzeModule(filePath);
+  const resolvedRequests: ResolvedRequests = new Map();
+
+  for (const request of requests) {
+    if (resolvedRequests.has(request)) {
+      continue;
+    }
+    const resolvedRequest = await resolveRequest(filePath, request);
+    resolvedRequests.set(request, resolvedRequest);
+    if (
+      typeof resolvedRequest === "string" &&
+      !moduleGraph.has(resolvedRequest) &&
+      !workInProgress.has(resolvedRequest)
+    ) {
+      workInProgress.set(
+        resolvedRequest,
+        analyzeAndResolve(resolvedRequest, analyzeModule, resolveRequest, moduleGraph, workInProgress),
+      );
+    }
+  }
+  return [filePath, { compiledContents, resolvedRequests }];
 }
