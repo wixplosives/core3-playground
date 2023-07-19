@@ -21,11 +21,11 @@ export class PreviewManager {
 
     const coduxCodux = await getCoduxConfig(this.fs, "/");
     const boardGlobalSetupPath = coduxCodux?.boardGlobalSetup
-      ? await this.compilation?.api.resolveSpecifier(this.fs.root, "/", coduxCodux.boardGlobalSetup)
+      ? await this.compilation.api.resolveSpecifier(this.fs.root, "/", coduxCodux.boardGlobalSetup)
       : undefined;
 
     const entryModules = boardGlobalSetupPath ? [boardGlobalSetupPath, filePath] : filePath;
-    const moduleGraph = await this.compilation?.api.calculateModuleGraph(this.fs.root, entryModules);
+    const moduleGraph = await this.compilation.api.calculateModuleGraph(this.fs.root, entryModules);
     if (moduleGraph && this.previews.get(filePath) === previewRPC) {
       await previewRPC.api.evaluateAndRender(
         moduleGraph,
