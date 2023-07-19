@@ -145,7 +145,6 @@ async function calculateModuleGraph(
   );
 
   const compilationCacheStore = createStore(playgroundDbName, compilationCacheStoreName);
-  const textDecoder = new TextDecoder();
   const packageVersions = new Map<string, string>();
 
   const typescriptAnalyzer: ModuleAnalyzer = {
@@ -192,7 +191,6 @@ async function calculateModuleGraph(
   const javascriptAnalyzer: ModuleAnalyzer = {
     test: isJavaScriptFile,
     async analyze(filePath, fs) {
-      const fileRawContents = await fs.readFile(filePath);
       const cacheKey = await getCacheKey(filePath);
       if (cacheKey) {
         const cachedModule = await get<AnalyzedModule>(cacheKey, compilationCacheStore);
@@ -200,7 +198,7 @@ async function calculateModuleGraph(
           return cachedModule;
         }
       }
-      const fileContents = textDecoder.decode(fileRawContents);
+      const fileContents = await fs.readTextFile(filePath);
       const start = performance.now();
       const sourceFile = ts!.createSourceFile(filePath, fileContents, ts!.ScriptTarget.Latest);
       performance.measure(`Parse ${filePath}`, { start });
