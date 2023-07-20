@@ -2,24 +2,24 @@ import { extname } from "@file-services/path";
 import { del, get, update } from "idb-keyval";
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { type Compilation, type LibraryVersions } from "./compilation-worker";
 import { Editor } from "./components/editor";
 import type { IndentedList } from "./components/indented-list";
 import {
-  compilationBundleName,
-  compilationWorkerName,
   defaultLibVersions,
   ignoredFileTreeDirectories,
   openProjectsIDBKey,
+  processingBundleName,
+  processingWorkerName,
 } from "./constants";
 import { generateIndentedFsItems } from "./fs/async-fs-operations";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
+import { getCoduxConfig } from "./helpers/codux";
 import { imageMimeTypes } from "./helpers/dom";
 import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
 import type { Preview } from "./preview";
+import { type LibraryVersions, type Processing } from "./processing-worker";
 import { createRPCIframe, type RPCIframe } from "./rpc/rpc-iframe";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
-import { getCoduxConfig } from "./helpers/codux";
 
 export class PlaygroundApp {
   private fs: BrowserFileSystem | undefined;
@@ -27,7 +27,7 @@ export class PlaygroundApp {
   private appRoot: Root | undefined;
   private openDirectories = new Set<string>();
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
-  private compilation?: RPCWorker<Compilation> | undefined;
+  private processing?: RPCWorker<Processing> | undefined;
   private previews = new Map<string, RPCIframe<Preview>>();
 
   // passed to UI
@@ -78,11 +78,11 @@ export class PlaygroundApp {
 
     const coduxCodux = await getCoduxConfig(this.fs!, "/");
     const boardGlobalSetupPath = coduxCodux?.boardGlobalSetup
-      ? await this.compilation?.api.resolveSpecifier(this.fs!.root, "/", coduxCodux.boardGlobalSetup)
+      ? await this.processing?.api.resolveSpecifier(this.fs!.root, "/", coduxCodux.boardGlobalSetup)
       : undefined;
 
     const entryModules = boardGlobalSetupPath ? [boardGlobalSetupPath, filePath] : filePath;
-    const moduleGraph = await this.compilation?.api.calculateModuleGraph(this.fs!.root, entryModules);
+    const moduleGraph = await this.processing?.api.calculateModuleGraph(this.fs!.root, entryModules);
     if (moduleGraph && this.previews.get(filePath) === previewRPC) {
       await previewRPC.api.evaluateAndRender(
         moduleGraph,
@@ -223,22 +223,19 @@ export class PlaygroundApp {
   }
 
   private async initializeProject(fs: BrowserFileSystem) {
-    this.compilation?.close();
-    const compilationWorkerURL = new URL(compilationBundleName, import.meta.url);
-    const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, {
-      name: compilationWorkerName,
+    this.processing?.close();
+    const processingWorkerURL = new URL(processingBundleName, import.meta.url);
+    const processingWorker = createRPCWorker<Processing>(processingWorkerURL, {
+      name: processingWorkerName,
       type: "module",
     });
-    this.compilation = compilationWorker;
+    this.processing = processingWorker;
 
     const rootPackageLockPath = "/package-lock.json";
     const libVersions = (await fs.fileExists(rootPackageLockPath))
       ? this.getLibVersions((await fs.readJSONFile(rootPackageLockPath)) as PackageLock)
       : defaultLibVersions;
-    await compilationWorker.api.initialize(libVersions);
-    // const contents = await compilationWorker.api.compile("/a.ts", `export const a = 123;\nthrow new Error('wow');`);
-    // console.log(contents);
-    // (0, eval)(`(function (exports){${contents}\n})({})`);
+    await processingWorker.api.initialize(fs.root, libVersions);
   }
 
   private getLibVersions({ packages = {} }: PackageLock): LibraryVersions {
