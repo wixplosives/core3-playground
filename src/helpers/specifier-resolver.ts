@@ -1,5 +1,6 @@
 import path from "@file-services/path";
 import type { PackageJson } from "type-fest";
+import type { BrowserFileSystem } from "../fs/browser-file-system";
 
 /**
  * Required fs APIs for specifier resolution.
@@ -10,11 +11,6 @@ export interface IAsyncResolutionFileSystem {
   directoryExists(path: string): Promise<boolean>;
   readFile(path: string, encoding: "utf8"): Promise<string>;
   realpath(path: string): Promise<string>;
-
-  dirname(path: string): string;
-  join(...paths: string[]): string;
-  resolve(...pathSegments: string[]): string;
-  isAbsolute(path: string): boolean;
 }
 
 export interface IAsyncSpecifierResolverOptions {
@@ -119,7 +115,7 @@ const PACKAGE_JSON = "package.json";
 
 export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOptions): AsyncSpecifierResolver {
   const {
-    fs: { fileExists, directoryExists, readFile, realpath, dirname, join, resolve, isAbsolute },
+    fs: { fileExists, directoryExists, readFile, realpath },
     packageRoots = defaultPackageRoots,
     extensions = defaultExtensions,
     target = defaultTarget,
@@ -128,6 +124,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     alias = {},
     fallback = {},
   } = options;
+  const { dirname, join, resolve, isAbsolute } = path;
 
   const loadPackageJsonFromCached = wrapWithCache(loadPackageJsonFrom, resolvedPacakgesCache);
   const remapUsingAlias = createSpecifierRemapper(alias);
@@ -431,8 +428,12 @@ function getFromParsedTemplateMap<T extends string | false>(
   return undefined;
 }
 
-export function createCachedResolver(resolver: AsyncSpecifierResolver): AsyncSpecifierResolver {
-  const cache = new Map<string, Promise<IResolutionOutput>>();
+export const AsyncSpecifierResolverCache = Map<string, Promise<IResolutionOutput>>;
+
+export function createCachedResolver(
+  resolver: AsyncSpecifierResolver,
+  cache = new AsyncSpecifierResolverCache(),
+): AsyncSpecifierResolver {
   return (contextPath, specifier) => {
     const key = `${contextPath}${path.sep}${specifier}`;
     const cachedResolution = cache.get(key);
@@ -443,5 +444,18 @@ export function createCachedResolver(resolver: AsyncSpecifierResolver): AsyncSpe
       cache.set(key, result);
       return result;
     }
+  };
+}
+
+export function createResolutionFs(fs: BrowserFileSystem): IAsyncResolutionFileSystem {
+  return {
+    fileExists: fs.fileExists,
+    directoryExists: fs.directoryExists,
+    realpath(filePath) {
+      return Promise.resolve(filePath);
+    },
+    readFile(filePath) {
+      return fs.readTextFile(filePath);
+    },
   };
 }
