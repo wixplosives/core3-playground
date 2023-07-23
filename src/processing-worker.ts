@@ -70,7 +70,7 @@ async function initialize(rootDirectory: FileSystemDirectoryHandle, versions: Li
     typescriptURL: typescriptURL.href,
   };
 
-  const numberOfWorkers = navigator.hardwareConcurrency ?? defaultCompilationWorkerCount;
+  const numberOfWorkers = Math.min(navigator.hardwareConcurrency ?? defaultCompilationWorkerCount, 12);
 
   for (let i = 0; i < numberOfWorkers; i++) {
     const compilationWorker = createRPCWorker<Compilation>(compilationWorkerURL, {
