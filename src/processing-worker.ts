@@ -78,8 +78,8 @@ async function initialize(rootDirectory: FileSystemDirectoryHandle, versions: Li
       type: "module",
     });
     compilationWorkers.push(compilationWorker);
-    await compilationWorker.api.initialize(initializeOptions);
   }
+  await Promise.all(compilationWorkers.map((worker) => worker.api.initialize(initializeOptions)));
 }
 
 async function resolveSpecifier(
