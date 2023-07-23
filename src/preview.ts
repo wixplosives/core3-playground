@@ -26,7 +26,8 @@ const onMessage = (event: MessageEvent<unknown>): void => {
 
 globalThis.addEventListener("message", onMessage, { once: true });
 
-async function evaluateAndRender(moduleGraph: ModuleGraph, entryPath: string, globalSetupPath?: string) {
+async function evaluateAndRender(moduleGraph: ModuleGraph, entryPaths: string | string[]) {
+  entryPaths = Array.isArray(entryPaths) ? entryPaths : [entryPaths];
   const moduleSystem = createBaseCjsModuleSystem({
     dirname: path.dirname,
     readFileSync(filePath) {
@@ -60,16 +61,15 @@ async function evaluateAndRender(moduleGraph: ModuleGraph, entryPath: string, gl
     },
   });
 
-  if (globalSetupPath) {
-    moduleSystem.requireModule(globalSetupPath);
-  }
-  const moduleExports = moduleSystem.requireModule(entryPath);
-  if (isReactBoard(moduleExports)) {
-    const containerId = "PREVIEW_ROOT";
-    const renderingContainer =
-      document.getElementById(containerId) ?? document.body.appendChild(document.createElement("div"));
-    renderingContainer.id = containerId;
-    await moduleExports.default.render(renderingContainer);
+  for (const entryPath of entryPaths) {
+    const moduleExports = moduleSystem.requireModule(entryPath);
+    if (isReactBoard(moduleExports)) {
+      const containerId = "PREVIEW_ROOT";
+      const renderingContainer =
+        document.getElementById(containerId) ?? document.body.appendChild(document.createElement("div"));
+      renderingContainer.id = containerId;
+      await moduleExports.default.render(renderingContainer);
+    }
   }
 }
 

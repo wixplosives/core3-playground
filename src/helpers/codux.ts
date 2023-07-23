@@ -10,8 +10,24 @@ export interface CoduxConfigFile {
 
 export async function getCoduxConfig(
   fs: BrowserFileSystem,
-  directoryPath: string,
-): Promise<CoduxConfigFile | undefined> {
-  const configFileHandle = await ignoreRejections(fs.openFile(path.join(directoryPath, coduxConfigFileName)));
-  return configFileHandle?.json() as Promise<{ boardGlobalSetup?: string }>;
+  contextPath: string,
+): Promise<{ configFilePath: string; config: CoduxConfigFile } | undefined> {
+  for (const directoryPath of pathChainToRoot(contextPath)) {
+    const configFilePath = path.join(directoryPath, coduxConfigFileName);
+    const configFileHandle = await ignoreRejections(fs.openFile(configFilePath));
+    if (configFileHandle) {
+      const config = (await configFileHandle?.json()) as CoduxConfigFile;
+      return { configFilePath, config };
+    }
+  }
+  return undefined;
+}
+
+function* pathChainToRoot(currentPath: string) {
+  let lastPath: string | undefined;
+  while (lastPath !== currentPath) {
+    yield currentPath;
+    lastPath = currentPath;
+    currentPath = path.dirname(currentPath);
+  }
 }

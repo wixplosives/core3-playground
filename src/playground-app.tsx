@@ -1,4 +1,4 @@
-import { extname } from "@file-services/path";
+import path from "@file-services/path";
 import { del, get, update } from "idb-keyval";
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -75,20 +75,26 @@ export class PlaygroundApp {
       existingRPC.close();
     }
     this.previews.set(filePath, previewRPC);
+    const contextPath = path.dirname(filePath);
+    const entryModules = [filePath];
+    const foundConfig = await getCoduxConfig(this.fs!, contextPath);
+    if (foundConfig) {
+      const { configFilePath, config } = foundConfig;
+      const boardGlobalSetupPath = config.boardGlobalSetup
+        ? await this.processing?.api.resolveSpecifier(
+            this.fs!.root,
+            path.dirname(configFilePath),
+            config.boardGlobalSetup,
+          )
+        : undefined;
+      if (boardGlobalSetupPath) {
+        entryModules.unshift(boardGlobalSetupPath);
+      }
+    }
 
-    const coduxCodux = await getCoduxConfig(this.fs!, "/");
-    const boardGlobalSetupPath = coduxCodux?.boardGlobalSetup
-      ? await this.processing?.api.resolveSpecifier(this.fs!.root, "/", coduxCodux.boardGlobalSetup)
-      : undefined;
-
-    const entryModules = boardGlobalSetupPath ? [boardGlobalSetupPath, filePath] : filePath;
     const moduleGraph = await this.processing?.api.calculateModuleGraph(this.fs!.root, entryModules);
     if (moduleGraph && this.previews.get(filePath) === previewRPC) {
-      await previewRPC.api.evaluateAndRender(
-        moduleGraph,
-        filePath,
-        boardGlobalSetupPath ? boardGlobalSetupPath : undefined,
-      );
+      await previewRPC.api.evaluateAndRender(moduleGraph, entryModules);
     }
   };
 
@@ -113,7 +119,7 @@ export class PlaygroundApp {
       if (itemIdx !== -1) {
         this.selectedFileIdx = itemIdx;
       } else if (this.fs && (await this.fs.fileExists(itemId))) {
-        const fileExtension = extname(itemId);
+        const fileExtension = path.extname(itemId);
         const imageMimeType = imageMimeTypes.get(fileExtension);
         const openFile: Editor.OpenFile = imageMimeType
           ? {
