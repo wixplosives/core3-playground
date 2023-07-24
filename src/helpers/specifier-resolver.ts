@@ -1,5 +1,6 @@
 import path from "@file-services/path";
 import type { PackageJson } from "type-fest";
+import { pathChainToRoot } from "../fs/async-fs-operations";
 import type { BrowserFileSystem } from "../fs/browser-file-system";
 
 /**
@@ -347,15 +348,6 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       return moduleFieldValue;
     }
     return typeof main === "string" ? main : undefined;
-  }
-
-  function* pathChainToRoot(currentPath: string) {
-    let lastPath: string | undefined;
-    while (lastPath !== currentPath) {
-      yield currentPath;
-      lastPath = currentPath;
-      currentPath = dirname(currentPath);
-    }
   }
 
   async function readJsonFileSafe(filePath: string): Promise<unknown> {

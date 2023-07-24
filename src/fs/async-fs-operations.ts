@@ -1,6 +1,9 @@
+import path from "@file-services/path";
 import type { IndentedList } from "../components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "../helpers/icons";
+import { ignoreRejections } from "../helpers/javascript";
 import type { FileSystemDirectoryItem } from "./async-fs-api";
+import type { BrowserFileSystem } from "./browser-file-system";
 
 export async function* generateIndentedFsItems(
   directoryItem: FileSystemDirectoryItem,
@@ -25,4 +28,24 @@ export async function* generateIndentedFsItems(
       yield* generateIndentedFsItems(item, expandedDirectories, ignoredDirectories, depth + 1);
     }
   }
+}
+
+export function* pathChainToRoot(currentPath: string) {
+  let lastPath: string | undefined;
+  while (lastPath !== currentPath) {
+    yield currentPath;
+    lastPath = currentPath;
+    currentPath = path.dirname(currentPath);
+  }
+}
+
+export async function findUp(fs: BrowserFileSystem, contextPath: string, fileName: string) {
+  for (const directoryPath of pathChainToRoot(contextPath)) {
+    const configFilePath = path.join(directoryPath, fileName);
+    const configFileHandle = await ignoreRejections(fs.openFile(configFilePath));
+    if (configFileHandle) {
+      return configFileHandle;
+    }
+  }
+  return;
 }
