@@ -10,6 +10,6 @@ export function createBase64DataURIModule(filePath: string, fileContents: Uint8A
   const assetDataURI = createBase64DataURI(fileContents, mimeType);
   const compiledContents = `"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-module.exports.default = ${JSON.stringify(assetDataURI)};\n`;
+exports.default = ${JSON.stringify(assetDataURI)};\n`;
   return compiledContents;
 }
