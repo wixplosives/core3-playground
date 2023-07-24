@@ -1,10 +1,16 @@
+import { createBase64DataURIModule } from "../helpers/url";
 import type { ModuleAnalyzer, ModuleAnalyzerContext } from "./analyzer-types";
 
 export const svgAnalyzer: ModuleAnalyzer = {
   test: isSvgFile,
-  analyze() {
+  async analyze({ filePath, fs }) {
+    const fileContents = await fs.readFile(filePath);
     // TODO: actually implement this
-    return { compiledContents: "exports.ReactComponent = () => null;", requests: [] };
+    return {
+      compiledContents: `${createBase64DataURIModule(filePath, fileContents)}
+exports.ReactComponent = () => null;\n`,
+      requests: [],
+    };
   },
 };
 
