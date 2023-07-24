@@ -80,7 +80,7 @@ function parseSvg() {
   }
   __html = "";
   for (const childNode of svgElement.childNodes) {
-    if (childNode.outerHTML) {
+    if (childNode instanceof Element) {
       __html += childNode.outerHTML;
     }
   }
