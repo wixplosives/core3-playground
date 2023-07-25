@@ -22,12 +22,7 @@ function parseSvg() {
   for (const attribute of svgElement.attributes) {
     svgProps[attribute.name] = attribute.value;
   }
-  __html = "";
-  for (const childNode of svgElement.childNodes) {
-    if (childNode instanceof Element) {
-      __html += childNode.outerHTML;
-    }
-  }
+  __html = svgElement.innerHTML;
 }
 
 exports.ReactComponent = ReactComponent;
