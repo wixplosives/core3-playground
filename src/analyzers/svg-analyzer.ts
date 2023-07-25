@@ -25,7 +25,7 @@ function parseSvg() {
   __html = svgElement.innerHTML;
 }
 
-exports.ReactComponent = ReactComponent;
+exports.ReactComponent = React.memo(ReactComponent);
 
 function ReactComponent({ className }) {
   if (__html === undefined) {
