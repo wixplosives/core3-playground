@@ -2,7 +2,7 @@ import path from "@file-services/path";
 import type { IndentedList } from "../components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "../helpers/icons";
 import { ignoreRejections } from "../helpers/javascript";
-import type { FileSystemDirectoryItem } from "./async-fs-api";
+import type { FileSystemDirectoryItem, FileSystemFileItem } from "./async-fs-api";
 import type { BrowserFileSystem } from "./browser-file-system";
 
 export async function* generateIndentedFsItems(
@@ -48,4 +48,20 @@ export async function findUp(fs: BrowserFileSystem, contextPath: string, fileNam
     }
   }
   return;
+}
+
+export async function* findFiles(
+  directoryItem: FileSystemDirectoryItem,
+  filterFile: (fileItem: FileSystemFileItem) => boolean,
+  filterDirectory: (fileItem: FileSystemDirectoryItem) => boolean,
+): AsyncGenerator<FileSystemFileItem> {
+  for await (const item of directoryItem) {
+    if (item.type === "file") {
+      if (filterFile(item)) {
+        yield item;
+      }
+    } else if (item.type === "directory" && filterDirectory(item)) {
+      yield* findFiles(item, filterFile, filterDirectory);
+    }
+  }
 }
