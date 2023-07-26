@@ -32,7 +32,7 @@
     "@types/react-dom": "^18.2.7",
     "@types/wicg-file-system-access": "^2020.9.6",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@wixc3/react-board": "^2.2.1",
+    "@wixc3/react-board": "^2.3.0",
     "esbuild": "^0.18.16",
     "esbuild-css-modules-plugin": "^2.7.1",
     "eslint": "^8.45.0",
