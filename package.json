@@ -12,12 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@file-services/path": "^8.0.1",
+    "@file-services/path": "^8.1.0",
     "@wixc3/postcss-modules": "^6.1.1",
     "idb-keyval": "^6.2.1",
     "js-base64": "^3.7.5",
     "mime": "^3.0.0",
-    "monaco-editor": "^0.40.0",
+    "monaco-editor": "^0.41.0",
     "postcss": "^8.4.27",
     "postcss-scss": "^4.0.6",
     "postcss-value-parser": "^4.2.0",
