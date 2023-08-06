@@ -35,10 +35,12 @@ export interface IAsyncSpecifierResolverOptions {
   extensions?: string[] | undefined;
 
   /**
-   * Whether to prefer the 'browser' field or 'main' field
-   * in `package.json`.
+   * Package export conditions to try resolving the specifier with.
+   *
+   * @default ['browser', 'import', 'require']
+   * @see https://nodejs.org/api/packages.html#conditional-exports
    */
-  target?: "node" | "browser" | undefined;
+  conditions?: string[];
 
   /**
    * Cache for resolved packages. Map keys are directoryPaths.
@@ -59,16 +61,10 @@ export interface IAsyncSpecifierResolverOptions {
    * Original specifier is attempted before fallback.
    */
   fallback?: Record<string, string | false> | undefined;
-
-  /**
-   * Support the "module" field. Picked up over "main".
-   *
-   * @default true when "target" is set to "browser"
-   */
-  moduleField?: boolean | undefined;
 }
 
 export interface IResolvedPackageJson {
+  name?: string | undefined;
   filePath: string;
   directoryPath: string;
   mainPath?: string | undefined;
@@ -77,6 +73,8 @@ export interface IResolvedPackageJson {
         [from: string]: string | false;
       }
     | undefined;
+  exports?: PackageJson.ExportConditions | undefined;
+  hasPatternExports?: boolean | undefined;
 }
 
 /**
@@ -107,9 +105,9 @@ export interface IResolutionOutput {
   visitedPaths: Set<string>;
 }
 
-const defaultTarget = "browser";
 const defaultPackageRoots = ["node_modules"];
 const defaultExtensions = [".js", ".json"];
+const defaultConditions = ["browser", "import", "require"];
 const isRelative = (specifier: string) =>
   specifier === "." || specifier === ".." || specifier.startsWith("./") || specifier.startsWith("../");
 const PACKAGE_JSON = "package.json";
@@ -119,13 +117,16 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     fs: { fileExists, directoryExists, readFile, realpath },
     packageRoots = defaultPackageRoots,
     extensions = defaultExtensions,
-    target = defaultTarget,
-    moduleField = target === "browser",
+    conditions = defaultConditions,
     resolvedPacakgesCache = new Map<string, Promise<IResolvedPackageJson | undefined>>(),
     alias = {},
     fallback = {},
   } = options;
   const { dirname, join, resolve, isAbsolute } = path;
+
+  const exportConditions = new Set(conditions);
+  const targetsBrowser = exportConditions.has("browser");
+  const targetsEsm = exportConditions.has("import");
 
   const loadPackageJsonFromCached = wrapWithCache(loadPackageJsonFrom, resolvedPacakgesCache);
   const remapUsingAlias = createSpecifierRemapper(alias);
@@ -145,7 +146,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
         if (!(await fileExists(resolvedFilePath))) {
           continue;
         }
-        if (target === "browser") {
+        if (targetsBrowser) {
           const toPackageJson = await findUpPackageJson(dirname(resolvedFilePath));
           if (toPackageJson) {
             visitedPaths.add(toPackageJson.filePath);
@@ -179,7 +180,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       yield specifierAlias;
     }
 
-    if (!emittedCandidate && target === "browser") {
+    if (!emittedCandidate && targetsBrowser) {
       const fromPackageJson = await findUpPackageJson(contextPath);
       if (fromPackageJson) {
         visitedPaths.add(fromPackageJson.filePath);
@@ -248,14 +249,49 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     }
   }
 
-  async function* packageSpecifierPaths(initialPath: string, specifier: string, visitedPaths: Set<string>) {
+  async function* packageSpecifierPaths(initialPath: string, request: string, visitedPaths: Set<string>) {
+    const [packageName, innerPath] = parsePackageSpecifier(request);
+    if (!packageName.length || (packageName.startsWith("@") && !packageName.includes("/"))) {
+      return;
+    }
+
+    const ownPackageJson = await findUpPackageJson(initialPath);
+    if (ownPackageJson !== undefined) {
+      visitedPaths.add(ownPackageJson.filePath);
+      if (ownPackageJson.name === packageName) {
+        if (ownPackageJson.exports !== undefined) {
+          yield* matchExportsField(
+            ownPackageJson.directoryPath,
+            ownPackageJson.exports,
+            innerPath,
+            ownPackageJson.hasPatternExports,
+          );
+          return;
+        }
+      }
+    }
+
     for (const packagesPath of packageRootsToPaths(initialPath)) {
       if (!(await directoryExists(packagesPath))) {
         continue;
       }
-      const specifierInPackages = join(packagesPath, specifier);
-      yield* fileSpecifierPaths(specifierInPackages);
-      yield* directorySpecifierPaths(specifierInPackages, visitedPaths);
+      const packageDirectoryPath = join(packagesPath, packageName);
+      const resolvedPackageJson = await loadPackageJsonFromCached(packageDirectoryPath);
+      if (resolvedPackageJson !== undefined) {
+        visitedPaths.add(resolvedPackageJson.filePath);
+      }
+      if (resolvedPackageJson?.exports !== undefined) {
+        yield* matchExportsField(
+          packageDirectoryPath,
+          resolvedPackageJson.exports,
+          innerPath,
+          resolvedPackageJson.hasPatternExports,
+        );
+        return;
+      }
+      const requestInPackages = join(packagesPath, request);
+      yield* fileSpecifierPaths(requestInPackages);
+      yield* directorySpecifierPaths(requestInPackages, visitedPaths);
     }
   }
 
@@ -287,7 +323,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
 
     const { browser } = packageJson;
     let browserMappings: Record<string, string | false> | undefined = undefined;
-    if (target === "browser" && typeof browser === "object" && browser !== null) {
+    if (targetsBrowser && typeof browser === "object" && browser !== null) {
       browserMappings = Object.create(null) as Record<string, string | false>;
       for (const [from, to] of Object.entries(browser)) {
         const resolvedFrom = isRelative(from) ? await resolveRelative(join(directoryPath, from)) : from;
@@ -300,11 +336,16 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       }
     }
 
+    const [desugerifiedExports, hasPatternExports] = desugarifyExportsField(packageJson.exports);
+
     return {
+      name: packageJson.name,
       filePath: packageJsonPath,
       directoryPath,
       mainPath,
       browserMappings,
+      exports: desugerifiedExports,
+      hasPatternExports,
     };
   }
 
@@ -342,9 +383,9 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
   }
 
   function packageJsonTarget({ main, browser, module: moduleFieldValue }: PackageJson): string | undefined {
-    if (target === "browser" && typeof browser === "string") {
+    if (targetsBrowser && typeof browser === "string") {
       return browser;
-    } else if (moduleField && typeof moduleFieldValue === "string") {
+    } else if (targetsEsm && typeof moduleFieldValue === "string") {
       return moduleFieldValue;
     }
     return typeof main === "string" ? main : undefined;
@@ -355,6 +396,43 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       return JSON.parse(await readFile(filePath, "utf8")) as unknown;
     } catch {
       return undefined;
+    }
+  }
+
+  function* matchExportsField(
+    contextPath: string,
+    exportConditions: PackageJson.ExportConditions,
+    innerPath: string,
+    hasPatternExports?: boolean,
+  ) {
+    const exactMatchExports = exportConditions[innerPath];
+    if (exactMatchExports !== undefined) {
+      yield* resolveExportConditions(contextPath, exactMatchExports);
+    } else if (hasPatternExports) {
+      const matchedPattern = matchSubpathPatterns(exportConditions, innerPath);
+      if (matchedPattern !== undefined) {
+        yield join(contextPath, matchedPattern);
+      }
+    }
+  }
+
+  function* resolveExportConditions(directoryPath: string, exportedValue: PackageJson.Exports): Generator<string> {
+    if (exportedValue === null) {
+      return;
+    } else if (typeof exportedValue === "string") {
+      yield join(directoryPath, exportedValue);
+    } else if (typeof exportedValue === "object") {
+      if (Array.isArray(exportedValue)) {
+        for (const arrayItem of exportedValue) {
+          yield* resolveExportConditions(directoryPath, arrayItem);
+        }
+      } else {
+        for (const [key, value] of Object.entries(exportedValue)) {
+          if (key === "default" || exportConditions.has(key)) {
+            yield* resolveExportConditions(directoryPath, value);
+          }
+        }
+      }
     }
   }
 }
@@ -427,7 +505,7 @@ export function createCachedResolver(
   cache = new AsyncSpecifierResolverCache(),
 ): AsyncSpecifierResolver {
   return (contextPath, specifier) => {
-    const key = `${contextPath}${path.sep}${specifier}`;
+    const key = `${contextPath}${path.delimiter}${specifier}`;
     const cachedResolution = cache.get(key);
     if (cachedResolution) {
       return cachedResolution;
@@ -450,4 +528,94 @@ export function createResolutionFs(fs: BrowserFileSystem): IAsyncResolutionFileS
       return fs.readTextFile(filePath);
     },
   };
+}
+
+/**
+ * Parse a package specifier into a tuple of package name and path in package.
+ * Handles both scoped and non-scoped package specifiers and returns a default path of '.' if no path is specified.
+ *
+ * @param specifier - The package specifier to parse.
+ * @example parsePackageSpecifier('react-dom') === ['react-dom', "."]
+ * @example parsePackageSpecifier('react-dom/client') === ['react-dom', './client']
+ * @example parsePackageSpecifier('@stylable/core') === ['@stylable/core', "./core"]
+ * @example parsePackageSpecifier('@stylable/core/dist/some-file') === ['@stylable/core', './dist/some-file']
+ */
+function parsePackageSpecifier(specifier: string): readonly [packageName: string, pathInPackage: string] {
+  const firstSlashIdx = specifier.indexOf("/");
+  if (firstSlashIdx === -1) {
+    return [specifier, "."];
+  }
+  const isScopedPackage = specifier.startsWith("@");
+  if (isScopedPackage) {
+    const secondSlashIdx = specifier.indexOf("/", firstSlashIdx + 1);
+    return secondSlashIdx === -1
+      ? [specifier, "."]
+      : [specifier.slice(0, secondSlashIdx), "." + specifier.slice(secondSlashIdx)];
+  } else {
+    return [specifier.slice(0, firstSlashIdx), "." + specifier.slice(firstSlashIdx)];
+  }
+}
+
+/**
+ * Desugarify the `exports` field of a package.json file.
+ *
+ * If `exports` is a string or an array, it is converted to an object with a single key of `'.'`.
+ * If `exports` is already an object and has a key of `'.'` or starts with `'./'`, it is returned as is.
+ * Otherwise, `exports` is wrapped in an object with a single key of `'.'`.
+ *
+ * @param packageExports - The `exports` field of a package.json file.
+ * @returns tuple containing the desugarified `exports` field, with a flag saying whether it includes pattern exports.
+ */
+function desugarifyExportsField(
+  packageExports: PackageJson.Exports | undefined,
+): [PackageJson.ExportConditions | undefined, boolean] {
+  let hasPatternExports = false;
+  if (packageExports === undefined || packageExports === null) {
+    packageExports = undefined;
+  } else if (typeof packageExports === "string" || Array.isArray(packageExports)) {
+    packageExports = { ".": packageExports };
+  } else {
+    for (const key of Object.keys(packageExports)) {
+      if (key.includes("*")) {
+        hasPatternExports = true;
+      }
+      if (key !== "." && !key.startsWith("./")) {
+        packageExports = { ".": packageExports };
+        hasPatternExports = false;
+        break;
+      }
+    }
+  }
+  return [packageExports, hasPatternExports];
+}
+
+function matchSubpathPatterns(exportedSubpaths: PackageJson.ExportConditions, innerPath: string): string | undefined {
+  let matchedPattern: string | undefined;
+  for (const [patternKey, patternValue] of Object.entries(exportedSubpaths)) {
+    const keyStarIdx = patternKey.indexOf("*");
+    if (keyStarIdx === -1 || patternKey.indexOf("*", keyStarIdx + 1) !== -1) {
+      continue;
+    }
+    const keyPrefix = patternKey.slice(0, keyStarIdx);
+    if (!innerPath.startsWith(keyPrefix)) {
+      continue;
+    }
+    const keySuffix = patternKey.slice(keyStarIdx + 1);
+    if (keySuffix && !innerPath.endsWith(keySuffix)) {
+      continue;
+    }
+    if (patternValue === null) {
+      return undefined;
+    } else if (typeof patternValue === "string") {
+      const innerPathStarValue = innerPath.slice(keyPrefix.length, innerPath.length - keySuffix.length);
+      const valueStarIdx = patternValue.indexOf("*");
+      if (valueStarIdx === -1 || patternValue.indexOf("*", valueStarIdx + 1) !== -1) {
+        continue;
+      }
+      const valuePrefix = patternValue.slice(0, valueStarIdx);
+      const valueSuffix = patternValue.slice(valueStarIdx + 1);
+      matchedPattern = valuePrefix + innerPathStarValue + valueSuffix;
+    }
+  }
+  return matchedPattern;
 }
