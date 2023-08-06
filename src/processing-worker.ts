@@ -18,6 +18,7 @@ const resolverOptions: Partial<IAsyncSpecifierResolverOptions> = {
   extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"],
   alias: {
     "@babel/runtime/helpers/esm/*": "@babel/runtime/helpers/*",
+    tslib: "tslib/tslib.js",
   },
   fallback: {
     // to support @wixc3/react-board's react-dom/client import in reac@17 projects
