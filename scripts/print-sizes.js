@@ -12,7 +12,7 @@ await printDirectoryDeep("dist", distURL);
 
 async function printDirectoryDeep(directoryName, directoryURL, padding = 0) {
   console.log(`${directoryName}/`.padStart(padding + directoryName.length + 1));
-  for (const item of fs.readdirSync(directoryURL, { withFileTypes: true })) {
+  for (const item of readdirSyncSorted(directoryURL)) {
     if (item.isFile()) {
       const fileName = item.name;
       const fileURL = new URL(fileName, directoryURL);
@@ -28,6 +28,26 @@ async function printDirectoryDeep(directoryName, directoryURL, padding = 0) {
       await printDirectoryDeep(item.name, new URL(`${item.name}/`, directoryURL), padding + 2);
     }
   }
+}
+
+function* readdirSyncSorted(directoryURL) {
+  const directories = [];
+  const files = [];
+  for (const item of fs.readdirSync(directoryURL, { withFileTypes: true })) {
+    if (item.isDirectory()) {
+      directories.push(item);
+    } else if (item.isFile()) {
+      files.push(item);
+    }
+  }
+  directories.sort(sortEntriesByName);
+  files.sort(sortEntriesByName);
+  yield* directories;
+  yield* files;
+}
+
+function sortEntriesByName(a, b) {
+  return a.name >= b.name ? 1 : -1;
 }
 
 async function fileSizes(fileURL) {
