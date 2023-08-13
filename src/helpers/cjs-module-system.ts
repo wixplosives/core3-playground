@@ -95,15 +95,12 @@ const falseModule = {
   children: [],
 };
 
-const markedErrorSymbol = Symbol("markedError");
 const evaluationErrorPrefix = "Failed evaluating: ";
-type MarkedEvaluationError = Error & {
-  [markedErrorSymbol]: boolean;
-};
 
 export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): ICommonJsModuleSystem {
   const { resolveFrom, dirname, readFileSync, globals = {}, loadModuleHook } = options;
   const requireCache = new Map<string, IModule>();
+  const seenErrors = new WeakSet<Error>();
 
   const load = loadModuleHook ? loadModuleHook(loadModule) : loadModule;
 
@@ -191,11 +188,9 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     } catch (e) {
       requireCache.delete(filePath);
       if (e instanceof Error) {
-        const alreadyMarked = markedErrorSymbol in e;
-        e.message = `${evaluationErrorPrefix}${filePath} -> ${
-          alreadyMarked ? e.message.slice(evaluationErrorPrefix.length) : e.message
-        }`;
-        (e as MarkedEvaluationError)[markedErrorSymbol] = true;
+        const originalMessage = seenErrors.has(e) ? e.message.slice(evaluationErrorPrefix.length) : e.message;
+        e.message = `${evaluationErrorPrefix}${filePath} -> ${originalMessage}`;
+        seenErrors.add(e);
       }
       throw e;
     }
