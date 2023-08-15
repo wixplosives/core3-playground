@@ -39,7 +39,7 @@ export function* pathChainToRoot(currentPath: string) {
   }
 }
 
-export async function findUp(fs: BrowserFileSystem, contextPath: string, fileName: string) {
+export async function findUp(contextPath: string, fileName: string, fs: BrowserFileSystem) {
   for (const directoryPath of pathChainToRoot(contextPath)) {
     const configFilePath = path.join(directoryPath, fileName);
     const configFileHandle = await ignoreRejections(fs.openFile(configFilePath));

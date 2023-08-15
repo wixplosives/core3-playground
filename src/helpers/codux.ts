@@ -11,7 +11,7 @@ export async function getCoduxConfig(
   fs: BrowserFileSystem,
   contextPath: string,
 ): Promise<{ configFilePath: string; config: CoduxConfigFile } | undefined> {
-  const configFileItem = await findUp(fs, contextPath, coduxConfigFileName);
+  const configFileItem = await findUp(contextPath, coduxConfigFileName, fs);
   if (configFileItem) {
     const config = (await configFileItem?.json()) as CoduxConfigFile;
     return { configFilePath: configFileItem.path, config };
