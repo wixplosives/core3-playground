@@ -65,7 +65,7 @@ const generateScopedName = (name: string, filePath: string) => `${sanitizeForCla
 
 export const inlineCSSUrls = async (
   contextPath: string,
-  root: postcss.Root,
+  root: postcss.Root | postcss.Document,
   resolver: AsyncSpecifierResolver,
   fs: BrowserFileSystem,
 ) => {

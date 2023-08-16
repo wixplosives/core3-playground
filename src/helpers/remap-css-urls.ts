@@ -2,9 +2,9 @@ import postcss from "postcss";
 import valueParser from "postcss-value-parser";
 
 export async function remapCSSURLs(
-  root: postcss.Root,
+  root: postcss.Root | postcss.Document,
   remapRequest: (request: string) => string | Promise<string>,
-): Promise<postcss.Root> {
+): Promise<postcss.Root | postcss.Document> {
   const remappableNodes: Array<valueParser.StringNode | valueParser.WordNode> = [];
   const declsToUpdate = new Map<postcss.Declaration, valueParser.Node[]>();
   const atRulesToUpdate = new Map<postcss.AtRule, valueParser.Node[]>();
