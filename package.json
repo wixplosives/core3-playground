@@ -9,7 +9,8 @@
     "start": "node scripts/build.js --watch",
     "test": "npm run typecheck && npm run lint && npm run build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prettify": "prettier --write ."
   },
   "dependencies": {
     "@file-services/path": "^8.1.2",
