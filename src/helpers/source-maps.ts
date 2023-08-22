@@ -53,7 +53,7 @@ export async function inlineExternalJsSourceMap(
       return fileContents;
     }
     const { resolvedFile: resolvedMapPath } = await resolver(path.dirname(filePath), `./${sourceMapTarget}`);
-    if (resolvedMapPath) {
+    if (resolvedMapPath && path.extname(resolvedMapPath) === ".map") {
       const sourceMap = await inlineSourcesIntoSourceMap(fs, resolvedMapPath, resolver);
       return inlineJsSourceMap(sourceMap, fileContents);
     }
@@ -76,7 +76,7 @@ export async function inlineExternalCssSourceMap(
       return fileContents;
     }
     const { resolvedFile: resolvedMapPath } = await resolver(path.dirname(filePath), `./${sourceMapTarget}`);
-    if (resolvedMapPath) {
+    if (resolvedMapPath && path.extname(resolvedMapPath) === ".map") {
       const sourceMap = await inlineSourcesIntoSourceMap(fs, resolvedMapPath, resolver);
       return inlineCssSourceMap(sourceMap, fileContents);
     }
