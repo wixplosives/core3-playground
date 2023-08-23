@@ -44,6 +44,7 @@ export async function inlineExternalJsSourceMap(
   fileContents: string,
   fs: BrowserFileSystem,
   resolver: AsyncSpecifierResolver,
+  sourceURLPrefix = filePathSourceMapPrefix,
 ) {
   const sourceMappingURLIdx = fileContents.lastIndexOf(jsSourceMapURLPrefix);
 
@@ -58,7 +59,7 @@ export async function inlineExternalJsSourceMap(
       return inlineJsSourceMap(sourceMap, fileContents);
     }
   }
-  return `${fileContents}\n//# sourceURL=${filePathSourceMapPrefix + filePath}\n`;
+  return `${fileContents}\n//# sourceURL=${sourceURLPrefix + filePath}\n`;
 }
 
 export async function inlineExternalCssSourceMap(
@@ -66,6 +67,7 @@ export async function inlineExternalCssSourceMap(
   fileContents: string,
   fs: BrowserFileSystem,
   resolver: AsyncSpecifierResolver,
+  sourceURLPrefix = filePathSourceMapPrefix,
 ) {
   const sourceMappingURLIdx = fileContents.lastIndexOf(cssSourceMapURLPrefix);
 
@@ -81,7 +83,7 @@ export async function inlineExternalCssSourceMap(
       return inlineCssSourceMap(sourceMap, fileContents);
     }
   }
-  return `${fileContents}\n/*# sourceURL=${filePathSourceMapPrefix + filePath} */\n`;
+  return `${fileContents}\n/*# sourceURL=${sourceURLPrefix + filePath} */\n`;
 }
 
 function isNotLocalSourceMap(sourceMapTarget: string) {
@@ -94,6 +96,7 @@ async function inlineSourcesIntoSourceMap(
   fs: BrowserFileSystem,
   sourceMapPath: string,
   resolver: AsyncSpecifierResolver,
+  sourceURLPrefix = filePathSourceMapPrefix,
 ): Promise<SourceMapLike> {
   const sourceMap = (await fs.readJSONFile(sourceMapPath)) as SourceMapLike;
   if (sourceMap.sources?.length) {
@@ -101,8 +104,8 @@ async function inlineSourcesIntoSourceMap(
     sourceMap.sourcesContent ??= [];
     for (const [idx, source] of sourceMap.sources.entries()) {
       const { resolvedFile: resolvedSourcePath } = await resolver(mapFileContext, `./${source}`);
-      sourceMap.sources[idx] =
-        filePathSourceMapPrefix + (resolvedSourcePath ? resolvedSourcePath : path.join(mapFileContext, source));
+      const originalSourcePath = resolvedSourcePath ? resolvedSourcePath : path.join(mapFileContext, source);
+      sourceMap.sources[idx] = sourceURLPrefix + originalSourcePath;
       if (resolvedSourcePath && typeof sourceMap.sourcesContent[idx] !== "string") {
         sourceMap.sourcesContent[idx] = await fs.readTextFile(resolvedSourcePath);
       }
