@@ -2,7 +2,6 @@
 
 import fs from "node:fs/promises";
 import { build, context } from "esbuild";
-import cssModulesPlugin from "esbuild-css-modules-plugin";
 import { globalExternals } from "@fal-works/esbuild-plugin-global-externals";
 import open, { apps } from "open";
 
@@ -35,7 +34,6 @@ const buildOptions = {
   jsx: "automatic",
   jsxDev: isWatch,
   plugins: [
-    cssModulesPlugin({ v2: true, v2CssModulesOption: { pattern: "[hash]-[local]" } }),
     globalExternals({
       "monaco-editor": { varName: "monaco", namedExports: ["editor", "Uri", "languages"] },
     }),
