@@ -64,9 +64,12 @@ export interface IAsyncSpecifierResolverOptions {
 }
 
 export interface IResolvedPackageJson {
-  name?: string | undefined;
   filePath: string;
   directoryPath: string;
+  name?: string | undefined;
+  main?: string | undefined;
+  module?: string | undefined;
+  browser?: string | undefined;
   mainPath?: string | undefined;
   browserMappings?:
     | {
@@ -180,7 +183,7 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       yield specifierAlias;
     }
 
-    if (!emittedCandidate && targetsBrowser) {
+    if (!emittedCandidate && targetsBrowser && !isRelative(specifier)) {
       const fromPackageJson = await findUpPackageJson(contextPath);
       if (fromPackageJson) {
         visitedPaths.add(fromPackageJson.filePath);
@@ -239,18 +242,23 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     const resolvedPackageJson = await loadPackageJsonFromCached(directoryPath);
     if (resolvedPackageJson !== undefined) {
       visitedPaths.add(resolvedPackageJson.filePath);
-    }
-    const mainPath = resolvedPackageJson?.mainPath;
 
-    if (mainPath !== undefined) {
-      yield* fileOrDirIndexSpecifierPaths(join(directoryPath, mainPath));
-    } else {
-      yield* fileSpecifierPaths(join(directoryPath, "index"));
+      if (targetsBrowser && resolvedPackageJson.browser !== undefined) {
+        yield* fileOrDirIndexSpecifierPaths(join(directoryPath, resolvedPackageJson.browser));
+      }
+      if (targetsEsm && resolvedPackageJson.module !== undefined) {
+        yield* fileOrDirIndexSpecifierPaths(join(directoryPath, resolvedPackageJson.module));
+      }
+      if (resolvedPackageJson.main !== undefined) {
+        yield* fileOrDirIndexSpecifierPaths(join(directoryPath, resolvedPackageJson.main));
+      }
     }
+
+    yield* fileSpecifierPaths(join(directoryPath, "index"));
   }
 
-  async function* packageSpecifierPaths(initialPath: string, request: string, visitedPaths: Set<string>) {
-    const [packageName, innerPath] = parsePackageSpecifier(request);
+  async function* packageSpecifierPaths(initialPath: string, specifier: string, visitedPaths: Set<string>) {
+    const [packageName, innerPath] = parsePackageSpecifier(specifier);
     if (!packageName.length || (packageName.startsWith("@") && !packageName.includes("/"))) {
       return;
     }
@@ -289,9 +297,9 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
         );
         return;
       }
-      const requestInPackages = join(packagesPath, request);
-      yield* fileSpecifierPaths(requestInPackages);
-      yield* directorySpecifierPaths(requestInPackages, visitedPaths);
+      const specifierInPackages = join(packagesPath, specifier);
+      yield* fileSpecifierPaths(specifierInPackages);
+      yield* directorySpecifierPaths(specifierInPackages, visitedPaths);
     }
   }
 
@@ -319,13 +327,12 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     if (typeof packageJson !== "object" || packageJson === null) {
       return undefined;
     }
-    const mainPath = packageJsonTarget(packageJson);
+    const { main: mainField, module: moduleField, browser: browserField } = packageJson;
 
-    const { browser } = packageJson;
     let browserMappings: Record<string, string | false> | undefined = undefined;
-    if (targetsBrowser && typeof browser === "object" && browser !== null) {
+    if (targetsBrowser && typeof browserField === "object" && browserField !== null) {
       browserMappings = Object.create(null) as Record<string, string | false>;
-      for (const [from, to] of Object.entries(browser)) {
+      for (const [from, to] of Object.entries(browserField)) {
         const resolvedFrom = isRelative(from) ? await resolveRelative(join(directoryPath, from)) : from;
         if (resolvedFrom && to !== undefined) {
           const resolvedTo = await resolveRemappedSpecifier(directoryPath, to);
@@ -342,7 +349,9 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
       name: packageJson.name,
       filePath: packageJsonPath,
       directoryPath,
-      mainPath,
+      main: typeof mainField === "string" ? mainField : undefined,
+      module: typeof moduleField === "string" ? moduleField : undefined,
+      browser: typeof browserField === "string" ? browserField : undefined,
       browserMappings,
       exports: desugerifiedExports,
       hasPatternExports,
@@ -380,15 +389,6 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
     } catch {
       return itemPath;
     }
-  }
-
-  function packageJsonTarget({ main, browser, module: moduleFieldValue }: PackageJson): string | undefined {
-    if (targetsBrowser && typeof browser === "string") {
-      return browser;
-    } else if (targetsEsm && typeof moduleFieldValue === "string") {
-      return moduleFieldValue;
-    }
-    return typeof main === "string" ? main : undefined;
   }
 
   async function readJsonFileSafe(filePath: string): Promise<unknown> {
