@@ -65,3 +65,26 @@ export async function* findFiles(
     }
   }
 }
+
+export async function getContainingPackageInfo(filePath: string, fs: BrowserFileSystem) {
+  const packageJsonItem = await findUp(path.dirname(filePath), "package.json", fs);
+  if (!packageJsonItem) {
+    throw new Error(`Could not find package.json for ${filePath}`);
+  }
+
+  interface PackageJsonLike {
+    name: string;
+    version: string;
+  }
+
+  const { name: packageName, version: packageVersion } = (await packageJsonItem.json()) as PackageJsonLike;
+
+  const packagePath = path.dirname(packageJsonItem.path);
+  const pathInPackage = path.relative(packagePath, filePath);
+  return {
+    packagePath,
+    packageName,
+    packageVersion,
+    pathInPackage,
+  };
+}

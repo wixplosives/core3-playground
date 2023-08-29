@@ -6,6 +6,7 @@ import { jsonAnalyzer } from "./analyzers/json-analyzer";
 import { sassAnalyzer } from "./analyzers/sass-analyzer";
 import { svgAnalyzer } from "./analyzers/svg-analyzer";
 import { typescriptAnalyzer } from "./analyzers/typescript-analyzer";
+import { getContainingPackageInfo } from "./fs/async-fs-operations";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { createCssSpecifierResolver } from "./helpers/css";
 import { openPlaygroundDb, type PlaygroundDatabase } from "./helpers/indexed-db";
@@ -48,12 +49,10 @@ let sassModuleResolver: AsyncSpecifierResolver | undefined = undefined;
 const specifierResolverCache = new AsyncSpecifierResolverCache();
 const cssAssetResolverCache = new AsyncSpecifierResolverCache();
 const sassModuleResolverCache = new AsyncSpecifierResolverCache();
-const packageVersionCache = new Map<string, string>();
 const fileHandleCache = new Map<string, FileSystemFileHandle>();
 const directoryHandleCache = new Map<string, FileSystemDirectoryHandle>();
 
 function clearCache() {
-  packageVersionCache.clear();
   fileHandleCache.clear();
   directoryHandleCache.clear();
   specifierResolverCache.clear();
@@ -148,7 +147,11 @@ async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
     sassModuleResolver,
   };
 
-  const cacheKey = await getCacheKey(analyzerContext, packageVersionCache);
+  const cacheKey =
+    isJavaScriptFile(analyzerContext) && filePath.includes("/node_modules/")
+      ? await getCacheKey(filePath, fs)
+      : undefined;
+
   if (cacheKey) {
     const cachedModule = await db.get("compilation-cache", cacheKey);
     if (cachedModule) {
@@ -172,47 +175,7 @@ async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
   };
 }
 
-async function getCacheKey(
-  analyzerContext: ModuleAnalyzerContext,
-  packageVersionCache?: Map<string, string>,
-): Promise<string | undefined> {
-  if (!isJavaScriptFile(analyzerContext)) {
-    return;
-  }
-  const { filePath, fs } = analyzerContext;
-  const nodeModulesFragment = "/node_modules/";
-  const nodeModulesIdx = filePath.lastIndexOf(nodeModulesFragment);
-  if (nodeModulesIdx === -1) {
-    return;
-  }
-  const packagePathIdx = nodeModulesIdx + nodeModulesFragment.length;
-  const nodeModulesPath = filePath.slice(0, packagePathIdx);
-  const packageFilePath = filePath.slice(packagePathIdx);
-  const packageName = getNameFromPackagePath(packageFilePath);
-  const packagePath = path.join(nodeModulesPath, packageName);
-  const packageVersion = await getPackageVersion(packagePath, fs, packageVersionCache);
-  return packageVersion ? `${packageName}@${packageVersion}/${path.relative(packagePath, filePath)}` : undefined;
-}
-
-function getNameFromPackagePath(packageFilePath: string): string {
-  const [maybeScope = "", maybeName = ""] = packageFilePath.split("/");
-  return maybeScope.startsWith("@") ? `${maybeScope}/${maybeName}` : maybeScope;
-}
-
-async function getPackageVersion(
-  packagePath: string,
-  fs: BrowserFileSystem,
-  packageVersionCache?: Map<string, string>,
-): Promise<string | undefined> {
-  const cachedVersion = packageVersionCache?.get(packagePath);
-  if (cachedVersion) {
-    return cachedVersion;
-  }
-  const packageJsonPath = path.join(packagePath, "package.json");
-  if (await fs.fileExists(packageJsonPath)) {
-    const { version: packageVersion } = (await fs.readJSONFile(packageJsonPath)) as { version: string };
-    packageVersionCache?.set(packagePath, packageVersion);
-    return packageVersion;
-  }
-  return undefined;
+async function getCacheKey(filePath: string, fs: BrowserFileSystem): Promise<string | undefined> {
+  const { packageName, packageVersion, pathInPackage } = await getContainingPackageInfo(filePath, fs);
+  return `${packageName}@${packageVersion}/${pathInPackage}`;
 }
