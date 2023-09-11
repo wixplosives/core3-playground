@@ -18,7 +18,7 @@
     "idb-keyval": "^6.2.1",
     "js-base64": "^3.7.5",
     "mime": "^3.0.0",
-    "monaco-editor": "^0.42.0-rc1",
+    "monaco-editor": "^0.43.0",
     "postcss": "^8.4.29",
     "postcss-scss": "^4.0.8",
     "postcss-value-parser": "^4.2.0",
