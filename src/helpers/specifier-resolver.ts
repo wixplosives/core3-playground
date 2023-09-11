@@ -401,37 +401,21 @@ export function createAsyncSpecifierResolver(options: IAsyncSpecifierResolverOpt
 
   function* matchExportsField(
     contextPath: string,
-    exportConditions: PackageJson.ExportConditions,
+    packageJsonExports: PackageJson.ExportConditions,
     innerPath: string,
     hasPatternExports?: boolean,
   ) {
-    const exactMatchExports = exportConditions[innerPath];
+    const exactMatchExports = packageJsonExports[innerPath];
     if (exactMatchExports !== undefined) {
-      yield* resolveExportConditions(contextPath, exactMatchExports);
-    } else if (hasPatternExports) {
-      const matchedPattern = matchSubpathPatterns(exportConditions, innerPath);
-      if (matchedPattern !== undefined) {
-        yield join(contextPath, matchedPattern);
+      for (const exactMatchValue of matchExportConditions(exactMatchExports, exportConditions)) {
+        if (exactMatchValue === null) {
+          break;
+        }
+        yield join(contextPath, exactMatchValue);
       }
-    }
-  }
-
-  function* resolveExportConditions(directoryPath: string, exportedValue: PackageJson.Exports): Generator<string> {
-    if (exportedValue === null) {
-      return;
-    } else if (typeof exportedValue === "string") {
-      yield join(directoryPath, exportedValue);
-    } else if (typeof exportedValue === "object") {
-      if (Array.isArray(exportedValue)) {
-        for (const arrayItem of exportedValue) {
-          yield* resolveExportConditions(directoryPath, arrayItem);
-        }
-      } else {
-        for (const [key, value] of Object.entries(exportedValue)) {
-          if (key === "default" || exportConditions.has(key)) {
-            yield* resolveExportConditions(directoryPath, value);
-          }
-        }
+    } else if (hasPatternExports) {
+      for (const matchedPattern of matchSubpathPatterns(packageJsonExports, innerPath, exportConditions)) {
+        yield join(contextPath, matchedPattern);
       }
     }
   }
@@ -589,8 +573,33 @@ function desugarifyExportsField(
   return [packageExports, hasPatternExports];
 }
 
-function matchSubpathPatterns(exportedSubpaths: PackageJson.ExportConditions, innerPath: string): string | undefined {
-  let matchedPattern: string | undefined;
+function* matchExportConditions(
+  conditionValue: PackageJson.Exports,
+  exportConditions: Set<string>,
+): Generator<string | null> {
+  if (conditionValue === null || typeof conditionValue === "string") {
+    yield conditionValue;
+  } else if (typeof conditionValue === "object") {
+    if (Array.isArray(conditionValue)) {
+      for (const arrayItem of conditionValue) {
+        yield* matchExportConditions(arrayItem, exportConditions);
+      }
+    } else {
+      for (const [key, value] of Object.entries(conditionValue)) {
+        if (key === "default" || exportConditions.has(key)) {
+          yield* matchExportConditions(value, exportConditions);
+        }
+      }
+    }
+  }
+}
+
+function* matchSubpathPatterns(
+  exportedSubpaths: PackageJson.ExportConditions,
+  innerPath: string,
+  exportConditions: Set<string>,
+): Generator<string, void, undefined> {
+  const matchedValues: string[] = [];
   for (const [patternKey, patternValue] of Object.entries(exportedSubpaths)) {
     const keyStarIdx = patternKey.indexOf("*");
     if (keyStarIdx === -1 || patternKey.indexOf("*", keyStarIdx + 1) !== -1) {
@@ -604,18 +613,20 @@ function matchSubpathPatterns(exportedSubpaths: PackageJson.ExportConditions, in
     if (keySuffix && !innerPath.endsWith(keySuffix)) {
       continue;
     }
-    if (patternValue === null) {
-      return undefined;
-    } else if (matchedPattern === undefined && typeof patternValue === "string") {
+
+    for (const valueToMatch of matchExportConditions(patternValue, exportConditions)) {
+      if (valueToMatch === null) {
+        return;
+      }
       const innerPathStarValue = innerPath.slice(keyPrefix.length, innerPath.length - keySuffix.length);
-      const valueStarIdx = patternValue.indexOf("*");
-      if (valueStarIdx === -1 || patternValue.indexOf("*", valueStarIdx + 1) !== -1) {
+      const valueStarIdx = valueToMatch.indexOf("*");
+      if (valueStarIdx === -1 || valueToMatch.indexOf("*", valueStarIdx + 1) !== -1) {
         continue;
       }
-      const valuePrefix = patternValue.slice(0, valueStarIdx);
-      const valueSuffix = patternValue.slice(valueStarIdx + 1);
-      matchedPattern = valuePrefix + innerPathStarValue + valueSuffix;
+      const valuePrefix = valueToMatch.slice(0, valueStarIdx);
+      const valueSuffix = valueToMatch.slice(valueStarIdx + 1);
+      matchedValues.push(valuePrefix + innerPathStarValue + valueSuffix);
     }
   }
-  return matchedPattern;
+  yield* matchedValues;
 }
