@@ -13,7 +13,6 @@ code playground, client-only, web application
 
 - super fast- less than 1s for development or production builds
 - custom build script under `scripts/build.js`
-- added plugin for css modules
 - separate building of external vendors
 - injects full reload upon change script to html in dev mode
 - auto opens chrome in dev mode
