@@ -1,6 +1,6 @@
 import path from "@file-services/path";
 import type { Compilation, InitializeOptions } from "./compilation-worker";
-import { compilationBundleName, defaultCompilationWorkerCount, compilationWorkerName, wixUnpkgURL } from "./constants";
+import { compilationBundleName, compilationWorkerName, defaultCompilationWorkerCount, wixUnpkgURL } from "./constants";
 import { createBrowserFileSystem } from "./fs/browser-file-system";
 import { fetchText } from "./helpers/dom";
 import { createModuleGraphResolver, type ModuleGraph } from "./helpers/module-graph-resolver";
@@ -16,10 +16,6 @@ import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 
 const resolverOptions: Partial<IAsyncSpecifierResolverOptions> = {
   extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"],
-  alias: {
-    "@babel/runtime/helpers/esm/*": "@babel/runtime/helpers/*",
-    tslib: "tslib/tslib.js",
-  },
   fallback: {
     // to support @wixc3/react-board's react-dom/client import in reac@17 projects
     "react-dom/client": false,
@@ -108,8 +104,16 @@ async function calculateModuleGraph(
   const directoryHandleCache = new Map<string, FileSystemDirectoryHandle>();
   const fs = createBrowserFileSystem(rootHandle, fileHandleCache, directoryHandleCache);
 
+  const resolutionFs = createResolutionFs(fs);
   const specifierResolver = createCachedResolver(
-    createAsyncSpecifierResolver({ fs: createResolutionFs(fs), ...resolverOptions }),
+    createAsyncSpecifierResolver({ fs: resolutionFs, ...resolverOptions }),
+  );
+  const cjsSpecifierResolver = createCachedResolver(
+    createAsyncSpecifierResolver({
+      fs: resolutionFs,
+      conditions: ["require"],
+      alias: { "@babel/runtime/helpers/esm/*": "@babel/runtime/helpers/*" },
+    }),
   );
 
   await Promise.all(compilationWorkers.map((worker) => worker.api.clearCache()));
@@ -125,7 +129,8 @@ async function calculateModuleGraph(
     },
     async resolveRequest(filePath, specifier) {
       const parentDirectory = path.dirname(filePath);
-      const { resolvedFile } = await specifierResolver(parentDirectory, specifier);
+      const resolver = specifierNeedsCjs(specifier) ? cjsSpecifierResolver : specifierResolver;
+      const { resolvedFile } = await resolver(parentDirectory, specifier);
       return resolvedFile;
     },
   });
@@ -135,4 +140,8 @@ async function calculateModuleGraph(
 
 function unpkgUrlFor(packageName: string, packageVersion: string, pathInPackage: string): URL {
   return new URL(`${packageName}@${packageVersion}/${pathInPackage}`, wixUnpkgURL);
+}
+
+function specifierNeedsCjs(specifier: string): boolean {
+  return specifier === "tslib" || specifier === "@babel/runtime" || specifier.startsWith("@babel/runtime/");
 }
