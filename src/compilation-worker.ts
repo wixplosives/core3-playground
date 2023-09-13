@@ -1,14 +1,13 @@
 import path from "@file-services/path";
-import { createStore, get, set } from "idb-keyval";
 import type { ModuleAnalyzer, ModuleAnalyzerContext } from "./analyzers/analyzer-types";
 import { cssAnalyzer } from "./analyzers/css-analyzer";
 import { isJavaScriptFile, javascriptAnalyzer } from "./analyzers/javascript-analyzer";
 import { sassAnalyzer } from "./analyzers/sass-analyzer";
 import { svgAnalyzer } from "./analyzers/svg-analyzer";
 import { typescriptAnalyzer } from "./analyzers/typescript-analyzer";
-import { compilationCacheStoreName, playgroundDbName } from "./constants";
 import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-file-system";
 import { createCssSpecifierResolver } from "./helpers/css";
+import { openPlaygroundDb, type PlaygroundDatabase } from "./helpers/indexed-db";
 import type { AnalyzedModule } from "./helpers/module-graph-resolver";
 import { createSassSpecifierResolver, evaluateSassLib } from "./helpers/sass";
 import {
@@ -23,8 +22,6 @@ import { createBase64DataURIModule } from "./helpers/url";
 import { rpcResponder } from "./rpc/rpc-responder";
 import type { RpcCall } from "./rpc/rpc-types";
 
-const compilationCacheStore = createStore(playgroundDbName, compilationCacheStoreName);
-
 export interface Compilation {
   initialize: typeof initialize;
   analyzeModule: typeof analyzeModule;
@@ -38,6 +35,7 @@ const { onCall } = rpcResponder<Compilation>({
 
 globalThis.addEventListener("message", (event) => onCall(event.data as RpcCall<Compilation>));
 
+let db: PlaygroundDatabase | undefined = undefined;
 let ts: typeof import("typescript") | undefined = undefined;
 let sass: typeof import("sass") | undefined = undefined;
 let fs: BrowserFileSystem | undefined = undefined;
@@ -79,7 +77,7 @@ export interface InitializeOptions {
   immutableLibText: string;
 }
 
-function initialize({
+async function initialize({
   rootDirectory,
   typescriptURL,
   typescriptLibText,
@@ -87,7 +85,7 @@ function initialize({
   sassLibText,
   immutableURL,
   immutableLibText,
-}: InitializeOptions): void {
+}: InitializeOptions): Promise<void> {
   fs = createBrowserFileSystem(rootDirectory, fileHandleCache, directoryHandleCache);
   ts = evaluateTypescriptLib(typescriptURL, typescriptLibText);
   sass = evaluateSassLib(sassURL, sassLibText, immutableLibText, immutableURL);
@@ -123,11 +121,15 @@ function initialize({
     }),
     sassModuleResolverCache,
   );
+
+  db = await openPlaygroundDb();
 }
 
 async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
   if (!fs) {
     throw new Error("fs was not initialized");
+  } else if (!db) {
+    throw new Error("db was not initialized");
   } else if (!ts) {
     throw new Error("typescript was not initialized");
   } else if (!sass) {
@@ -149,7 +151,7 @@ async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
 
   const cacheKey = await getCacheKey(analyzerContext, packageVersionCache);
   if (cacheKey) {
-    const cachedModule = await get<AnalyzedModule>(cacheKey, compilationCacheStore);
+    const cachedModule = await db.get("compilation-cache", cacheKey);
     if (cachedModule) {
       return cachedModule;
     }
@@ -159,7 +161,7 @@ async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
     if (test(analyzerContext)) {
       const analyzedModule = await analyze(analyzerContext);
       if (cacheKey) {
-        await set(cacheKey, analyzedModule, compilationCacheStore);
+        await db.put("compilation-cache", analyzedModule, cacheKey);
       }
       return analyzedModule;
     }

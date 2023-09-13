@@ -1,5 +1,4 @@
 import path from "@file-services/path";
-import { del, get, update } from "idb-keyval";
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Editor } from "./components/editor";
@@ -7,7 +6,6 @@ import type { IndentedList } from "./components/indented-list";
 import {
   defaultLibVersions,
   ignoredFileTreeDirectories,
-  openProjectsIDBKey,
   processingBundleName,
   processingWorkerName,
 } from "./constants";
@@ -16,6 +14,7 @@ import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-fi
 import { getCoduxConfig } from "./helpers/codux";
 import { imageMimeTypes } from "./helpers/dom";
 import { clamp, collectIntoArray, ignoreRejections } from "./helpers/javascript";
+import { openPlaygroundDb, type PlaygroundDatabase } from "./helpers/indexed-db";
 import type { Preview } from "./preview";
 import { type LibraryVersions, type Processing } from "./processing-worker";
 import { createRPCIframe, type RPCIframe } from "./rpc/rpc-iframe";
@@ -23,6 +22,7 @@ import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
 
 export class PlaygroundApp {
   private fs: BrowserFileSystem | undefined;
+  private db: PlaygroundDatabase | undefined;
 
   private appRoot: Root | undefined;
   private openDirectories = new Set<string>();
@@ -42,9 +42,15 @@ export class PlaygroundApp {
   }
 
   public async loadSavedProjects() {
-    const savedDirectoryHandles = await get<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey);
+    if (!this.db) {
+      this.db = await openPlaygroundDb();
+    }
+    const savedDirectoryHandles: Record<string, FileSystemDirectoryHandle> = {};
+    for await (const cursor of this.db.transaction("open-projects").objectStore("open-projects")) {
+      savedDirectoryHandles[cursor.key] = cursor.value;
+    }
     this.savedDirectoryHandles = savedDirectoryHandles;
-    this.savedProjectNames = savedDirectoryHandles && Object.keys(savedDirectoryHandles);
+    this.savedProjectNames = Object.keys(savedDirectoryHandles);
   }
 
   private renderApp() {
@@ -201,10 +207,10 @@ export class PlaygroundApp {
   };
 
   private async saveProject(directoryHandle: FileSystemDirectoryHandle) {
-    await update<Record<string, FileSystemDirectoryHandle>>(openProjectsIDBKey, (savedProjects = {}) => {
-      savedProjects[directoryHandle.name] = directoryHandle;
-      return savedProjects;
-    });
+    if (!this.db) {
+      this.db = await openPlaygroundDb();
+    }
+    await this.db.put("open-projects", directoryHandle, directoryHandle.name);
   }
 
   private async handleHasPermission(fileSystemHandle: FileSystemHandle) {
@@ -215,7 +221,10 @@ export class PlaygroundApp {
   }
 
   private onClearSaved = async () => {
-    await del(openProjectsIDBKey);
+    if (!this.db) {
+      this.db = await openPlaygroundDb();
+    }
+    await this.db.clear("open-projects");
     await this.loadSavedProjects();
     this.renderApp();
   };

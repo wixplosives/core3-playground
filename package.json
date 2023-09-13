@@ -15,7 +15,7 @@
   "dependencies": {
     "@file-services/path": "^8.2.0",
     "@wixc3/postcss-modules": "^6.1.1",
-    "idb-keyval": "^6.2.1",
+    "idb": "^7.1.1",
     "js-base64": "^3.7.5",
     "mime": "^3.0.0",
     "monaco-editor": "^0.43.0",
