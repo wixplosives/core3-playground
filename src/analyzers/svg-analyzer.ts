@@ -12,35 +12,45 @@ export const svgAnalyzer: ModuleAnalyzer = {
 const React = require('react');
 
 const svgContents = ${JSON.stringify(textContents)};
-let __html;
-const svgProps = {};
+let svgElement;
 
-function parseSvg() {
-  const domParser = new DOMParser();
-  const xmlDoc = domParser.parseFromString(svgContents, "image/svg+xml");
-  const svgElement = xmlDoc.documentElement;
-  for (const attribute of svgElement.attributes) {
-    svgProps[attribute.name] = attribute.value;
+exports.ReactComponent = React.memo(function ReactComponent({ className, children, ...props }) {
+  if (!svgElement) {
+    svgElement = new DOMParser().parseFromString(svgContents, "image/svg+xml").documentElement;
   }
-  __html = svgElement.innerHTML;
-}
 
-exports.ReactComponent = React.memo(ReactComponent);
+  const svgRef = React.useRef(null);
 
-function ReactComponent({ className }) {
-  if (__html === undefined) {
-    parseSvg(svgContents);
-  }
+  React.useLayoutEffect(() => {
+    let classes = svgElement.getAttribute("class");
+    if (className) {
+      classes = classes ? (classes + " " + className) : className;
+    }
+    if (classes) {
+      svgRef.current.setAttribute("class", classes);
+    } else {
+      svgRef.current.removeAttribute("class");
+    }
+  }, [className]);
+
+  React.useLayoutEffect(() => {
+    for (const attribute of svgElement.attributes) {
+      if (!svgRef.current.hasAttribute(attribute.name)) {
+        svgRef.current.setAttribute(attribute.name, attribute.value);
+      }
+    }
+  }, []);
+
   return React.createElement(
     "svg",
     {
-      ...svgProps,
-      className: className !== undefined ? className : svgProps.className,
-      dangerouslySetInnerHTML: { __html },
+      ...props,
+      ref: svgRef,
+      dangerouslySetInnerHTML: { __html: svgElement.innerHTML },
     },
     null
   );
-}\n`,
+});\n`,
       requests: ["react"],
     };
   },
