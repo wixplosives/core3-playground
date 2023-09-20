@@ -9,7 +9,8 @@ import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-fi
 import { createCssSpecifierResolver } from "./helpers/css";
 import { openPlaygroundDb, type PlaygroundDatabase } from "./helpers/indexed-db";
 import type { AnalyzedModule } from "./helpers/module-graph-resolver";
-import { createSassSpecifierResolver, evaluateSassLib } from "./helpers/sass";
+import { createSassSpecifierResolver } from "./helpers/sass-resolver";
+import { evaluateSassLib } from "./helpers/sass-lib-evaluate";
 import {
   AsyncSpecifierResolverCache,
   createAsyncSpecifierResolver,

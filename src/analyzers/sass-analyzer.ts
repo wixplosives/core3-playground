@@ -1,7 +1,7 @@
 import path from "@file-services/path";
 import postcssSCSS from "postcss-scss";
 import { createCssModule, createStyleInjectModule } from "../helpers/css";
-import { compileUsingSass } from "../helpers/sass";
+import { compileUsingSass } from "../helpers/sass-compile";
 import type { ModuleAnalyzer, ModuleAnalyzerContext } from "./analyzer-types";
 import { readCssAndInlineAssets } from "./css-analyzer";
 
