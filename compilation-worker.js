@@ -68,33 +68,43 @@ module.exports = ${JSON.stringify(s[t]||{})};
 const React = require('react');
 
 const svgContents = ${JSON.stringify(i)};
-let __html;
-const svgProps = {};
+let svgElement;
 
-function parseSvg() {
-  const domParser = new DOMParser();
-  const xmlDoc = domParser.parseFromString(svgContents, "image/svg+xml");
-  const svgElement = xmlDoc.documentElement;
-  for (const attribute of svgElement.attributes) {
-    svgProps[attribute.name] = attribute.value;
+exports.ReactComponent = React.memo(function ReactComponent({ className, children, ...props }) {
+  if (!svgElement) {
+    svgElement = new DOMParser().parseFromString(svgContents, "image/svg+xml").documentElement;
   }
-  __html = svgElement.innerHTML;
-}
 
-exports.ReactComponent = React.memo(ReactComponent);
+  const svgRef = React.useRef(null);
 
-function ReactComponent({ className }) {
-  if (__html === undefined) {
-    parseSvg(svgContents);
-  }
+  React.useLayoutEffect(() => {
+    let classes = svgElement.getAttribute("class");
+    if (className) {
+      classes = classes ? (classes + " " + className) : className;
+    }
+    if (classes) {
+      svgRef.current.setAttribute("class", classes);
+    } else {
+      svgRef.current.removeAttribute("class");
+    }
+  }, [className]);
+
+  React.useLayoutEffect(() => {
+    for (const attribute of svgElement.attributes) {
+      if (!svgRef.current.hasAttribute(attribute.name)) {
+        svgRef.current.setAttribute(attribute.name, attribute.value);
+      }
+    }
+  }, []);
+
   return React.createElement(
     "svg",
     {
-      ...svgProps,
-      className: className !== undefined ? className : svgProps.className,
-      dangerouslySetInnerHTML: { __html },
+      ...props,
+      ref: svgRef,
+      dangerouslySetInnerHTML: { __html: svgElement.innerHTML },
     },
     null
   );
-}
+});
 `,requests:["react"]}}};function Rw({fileExtension:t}){return t===".svg"}var Pu={test:Iw,async analyze({filePath:t,fs:e,ts:r}){let i={module:r.ModuleKind.CommonJS,esModuleInterop:!0,jsx:r.JsxEmit.ReactJSX,sourceMap:!0,inlineSources:!0},s=await e.readTextFile(t),o=tr(r,t,s,i),n=performance.now(),a=r.createSourceFile(t,o,r.ScriptTarget.Latest);return performance.measure(`Parse ${t} (compiled output)`,{start:n}),{compiledContents:o,requests:ir(r,a).specifiers}}};function Iw({fileExtension:t}){return t===".ts"||t===".tsx"||t===".mts"||t===".cts"}var pr=(t,e)=>e.some(r=>t instanceof r),Ru,Iu;function Tw(){return Ru||(Ru=[IDBDatabase,IDBObjectStore,IDBIndex,IDBCursor,IDBTransaction])}function qw(){return Iu||(Iu=[IDBCursor.prototype.advance,IDBCursor.prototype.continue,IDBCursor.prototype.continuePrimaryKey])}var Tu=new WeakMap,Nn=new WeakMap,qu=new WeakMap,zn=new WeakMap,Bt=new WeakMap;function Mw(t){let e=new Promise((r,i)=>{let s=()=>{t.removeEventListener("success",o),t.removeEventListener("error",n)},o=()=>{r(ue(t.result)),s()},n=()=>{i(t.error),s()};t.addEventListener("success",o),t.addEventListener("error",n)});return e.then(r=>{r instanceof IDBCursor&&Tu.set(r,t)}).catch(()=>{}),Bt.set(e,t),e}function Fw(t){if(Nn.has(t))return;let e=new Promise((r,i)=>{let s=()=>{t.removeEventListener("complete",o),t.removeEventListener("error",n),t.removeEventListener("abort",n)},o=()=>{r(),s()},n=()=>{i(t.error||new DOMException("AbortError","AbortError")),s()};t.addEventListener("complete",o),t.addEventListener("error",n),t.addEventListener("abort",n)});Nn.set(t,e)}var Un={get(t,e,r){if(t instanceof IDBTransaction){if(e==="done")return Nn.get(t);if(e==="objectStoreNames")return t.objectStoreNames||qu.get(t);if(e==="store")return r.objectStoreNames[1]?void 0:r.objectStore(r.objectStoreNames[0])}return ue(t[e])},set(t,e,r){return t[e]=r,!0},has(t,e){return t instanceof IDBTransaction&&(e==="done"||e==="store")?!0:e in t}};function ur(t){Un=t(Un)}function Lw(t){return t===IDBDatabase.prototype.transaction&&!("objectStoreNames"in IDBTransaction.prototype)?function(e,...r){let i=t.call(Je(this),e,...r);return qu.set(i,e.sort?e.sort():[e]),ue(i)}:qw().includes(t)?function(...e){return t.apply(Je(this),e),ue(Tu.get(this))}:function(...e){return ue(t.apply(Je(this),e))}}function Dw(t){return typeof t=="function"?Lw(t):(t instanceof IDBTransaction&&Fw(t),pr(t,Tw())?new Proxy(t,Un):t)}function ue(t){if(t instanceof IDBRequest)return Mw(t);if(zn.has(t))return zn.get(t);let e=Dw(t);return e!==t&&(zn.set(t,e),Bt.set(e,t)),e}var Je=t=>Bt.get(t);function Fu(t,e,{blocked:r,upgrade:i,blocking:s,terminated:o}={}){let n=indexedDB.open(t,e),a=ue(n);return i&&n.addEventListener("upgradeneeded",l=>{i(ue(n.result),l.oldVersion,l.newVersion,ue(n.transaction),l)}),r&&n.addEventListener("blocked",l=>r(l.oldVersion,l.newVersion,l)),a.then(l=>{o&&l.addEventListener("close",()=>o()),s&&l.addEventListener("versionchange",c=>s(c.oldVersion,c.newVersion,c))}).catch(()=>{}),a}var zw=["get","getKey","getAll","getAllKeys","count"],Nw=["put","add","delete","clear"],Bn=new Map;function Mu(t,e){if(!(t instanceof IDBDatabase&&!(e in t)&&typeof e=="string"))return;if(Bn.get(e))return Bn.get(e);let r=e.replace(/FromIndex$/,""),i=e!==r,s=Nw.includes(r);if(!(r in(i?IDBIndex:IDBObjectStore).prototype)||!(s||zw.includes(r)))return;let o=async function(n,...a){let l=this.transaction(n,s?"readwrite":"readonly"),c=l.store;return i&&(c=c.index(a.shift())),(await Promise.all([c[r](...a),s&&l.done]))[0]};return Bn.set(e,o),o}ur(t=>({...t,get:(e,r,i)=>Mu(e,r)||t.get(e,r,i),has:(e,r)=>!!Mu(e,r)||t.has(e,r)}));var Uw=["continue","continuePrimaryKey","advance"],Lu={},$n=new WeakMap,zu=new WeakMap,Bw={get(t,e){if(!Uw.includes(e))return t[e];let r=Lu[e];return r||(r=Lu[e]=function(...i){$n.set(this,zu.get(this)[e](...i))}),r}};async function*$w(...t){let e=this;if(e instanceof IDBCursor||(e=await e.openCursor(...t)),!e)return;e=e;let r=new Proxy(e,Bw);for(zu.set(r,e),Bt.set(r,Je(e));e;)yield r,e=await($n.get(r)||e.continue()),$n.delete(r)}function Du(t,e){return e===Symbol.asyncIterator&&pr(t,[IDBIndex,IDBObjectStore,IDBCursor])||e==="iterate"&&pr(t,[IDBIndex,IDBObjectStore])}ur(t=>({...t,get(e,r,i){return Du(e,r)?$w:t.get(e,r,i)},has(e,r){return Du(e,r)||t.has(e,r)}}));var Nu="core3-playground",Uu=2;var Bu=()=>Fu(Nu,Uu,{upgrade(t){for(let e of t.objectStoreNames)t.deleteObjectStore(e);t.createObjectStore("compilation-cache"),t.createObjectStore("open-projects")}});var $u=Y(ie(),1);var Wu=t=>{let e=$e({...t,extensions:[".scss",".sass",".css"]}),{includePaths:r=[]}=t;return async(i,s)=>{let o=new Set,n=[i,...r];for(let a of Wn(s))for(let l of n){let{resolvedFile:c,visitedPaths:f}=await e(l,a);for(let u of f)o.add(u);if(c)return{resolvedFile:c,visitedPaths:o}}return{resolvedRequest:void 0,visitedPaths:o}}};function*Wn(t){if(!t||t.startsWith("data:")||t.startsWith("http://")||t.startsWith("https://")||t.startsWith("sass:"))return;if(t.startsWith("~")){yield*Wn(t.slice(1));return}t.startsWith("./")||t.startsWith("../")||t==="."||t===".."||(yield*Wn(`./${t}`)),yield t;let r=$u.default.basename(t);r&&(r.startsWith("_")||(yield`${t.slice(0,-r.length)}_${r}`),yield`${t}/index`,yield`${t}/_index`)}function Hu(t,e,r,i){let o=Nt("immutable",i,r).requireModule(i),n=Nt("sass",t,e);n.requireCache.set("util",{id:"util",filename:"util",exports:{inspect:{}},children:[]}),n.requireCache.set("fs",{id:"fs",filename:"fs",exports:{},children:[]}),n.requireCache.set("immutable",{id:"immutable",filename:"immutable",exports:o,children:[]});let a=Object.create(globalThis),l={env:{},stdout:{isTTY:!1}};Object.defineProperty(a,"process",{get(){return l},set(){}}),n.globals.global=a,n.globals.globalThis=a;let c=n.requireModule(t),f=c.load??a._cliPkgExports?.[0]?.load,u={};return f({util:{inspect:{}},immutable:o},u),"info"in u?u:c}function Vu({api:t,dispatchResponse:e}){async function r({id:i,methodName:s,args:o,type:n}){if(n!=="call"||typeof s!="string")return;let a=t[s];if(typeof a!="function")e({type:"response",id:i,methodName:s,error:new Error(`${s} is not a function. typeof returned ${typeof a}`)});else try{let l=await a.apply(t,o);e({type:"response",id:i,methodName:s,returnValue:l})}catch(l){e({type:"response",id:i,methodName:s,error:l})}}return{onCall:r}}var{onCall:Ww}=Vu({api:{initialize:Jw,analyzeModule:Gw,clearCache:Hw},dispatchResponse:t=>globalThis.postMessage(t)});globalThis.addEventListener("message",t=>Ww(t.data));var fr,Hn,Vn,$t,Jn,Gn,Qn,Ju=new Lt,Gu=new Lt,Qu=new Lt,Yu=new Map,Ku=new Map,Zu=new Map;function Hw(){Yu.clear(),Ku.clear(),Zu.clear(),Ju.clear(),Gu.clear(),Qu.clear()}var Vw=[Pu,au,iu,Ou,Eu];async function Jw({rootDirectory:t,typescriptURL:e,typescriptLibText:r,sassURL:i,sassLibText:s,immutableURL:o,immutableLibText:n}){$t=gp(t,Ku,Zu),Hn=ou(e,r),Vn=Hu(i,s,n,o);let a=Sp($t);Jn=Ji($e({fs:a,extensions:[".ts",".tsx",".js",".jsx",".mjs",".cjs",".json"],fallback:{"react-dom/client":!1}}),Ju),Gn=Ji(Qp({fs:a}),Gu),Qn=Ji(Wu({fs:a}),Qu),fr=await Bu()}async function Gw(t){if($t)if(fr)if(Hn)if(Vn){if(!Jn||!Gn||!Qn)throw new Error("resolvers were not initialized")}else throw new Error("sass was not initialized");else throw new Error("typescript was not initialized");else throw new Error("db was not initialized");else throw new Error("fs was not initialized");let e={filePath:t,fileExtension:Wt.default.extname(t),fs:$t,ts:Hn,sass:Vn,specifierResolver:Jn,cssAssetResolver:Gn,sassModuleResolver:Qn},r=await Qw(e,Yu);if(r){let i=await fr.get("compilation-cache",r);if(i)return i}for(let{test:i,analyze:s}of Vw)if(i(e)){let o=await s(e);return r&&await fr.put("compilation-cache",o,r),o}return{compiledContents:Yi(t,await $t.readFile(t)),requests:[]}}async function Qw(t,e){if(!An(t))return;let{filePath:r,fs:i}=t,s="/node_modules/",o=r.lastIndexOf(s);if(o===-1)return;let n=o+s.length,a=r.slice(0,n),l=r.slice(n),c=Yw(l),f=Wt.default.join(a,c),u=await Kw(f,i,e);return u?`${c}@${u}/${Wt.default.relative(f,r)}`:void 0}function Yw(t){let[e="",r=""]=t.split("/");return e.startsWith("@")?`${e}/${r}`:e}async function Kw(t,e,r){let i=r?.get(t);if(i)return i;let s=Wt.default.join(t,"package.json");if(await e.fileExists(s)){let{version:o}=await e.readJSONFile(s);return r?.set(t,o),o}}
