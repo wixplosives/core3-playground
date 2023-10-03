@@ -14,32 +14,25 @@ export function rpcResponder<API>({ api, dispatchResponse }: ResponderOptions<AP
       return;
     }
 
-    const method = api[methodName];
-
-    if (typeof method !== "function") {
+    try {
+      const method = api[methodName];
+      if (typeof method !== "function") {
+        throw new Error(`${methodName} is not a function. typeof returned "${typeof method}"`);
+      }
+      const returnValue: unknown = await method.apply(api, args);
       dispatchResponse({
         type: "response",
         id,
         methodName,
-        error: new Error(`${methodName} is not a function. typeof returned ${typeof method}`),
+        returnValue,
       } as RpcResponse<API>);
-    } else {
-      try {
-        const returnValue: unknown = await method.apply(api, args);
-        dispatchResponse({
-          type: "response",
-          id,
-          methodName,
-          returnValue,
-        } as RpcResponse<API>);
-      } catch (error) {
-        dispatchResponse({
-          type: "response",
-          id,
-          methodName,
-          error,
-        } as RpcResponse<API>);
-      }
+    } catch (error) {
+      dispatchResponse({
+        type: "response",
+        id,
+        methodName,
+        error,
+      } as RpcResponse<API>);
     }
   }
 
