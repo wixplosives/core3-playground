@@ -29,7 +29,7 @@
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/mime": "^3.0.3",
     "@types/node": "20",
-    "@types/react": "^18.2.36",
+    "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.14",
     "@types/wicg-file-system-access": "^2023.10.2",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
