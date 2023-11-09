@@ -30,7 +30,7 @@
     "@types/mime": "^3.0.4",
     "@types/node": "20",
     "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.14",
+    "@types/react-dom": "^18.2.15",
     "@types/wicg-file-system-access": "^2023.10.3",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@wixc3/react-board": "^2.3.0",
