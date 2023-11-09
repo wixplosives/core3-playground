@@ -31,7 +31,7 @@
     "@types/node": "20",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.14",
-    "@types/wicg-file-system-access": "^2023.10.2",
+    "@types/wicg-file-system-access": "^2023.10.3",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@wixc3/react-board": "^2.3.0",
     "esbuild": "^0.19.5",
