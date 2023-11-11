@@ -46,7 +46,7 @@ export const Preview: React.FC<Preview.Props> = React.memo(({ className, filePat
         className={classes["previewIframe"]}
         src={iframeSrc}
         ref={iframeRef}
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-popups allow-modals"
         data-file-path={filePath}
         onLoad={onLoad}
       />
