@@ -614,18 +614,13 @@ function* matchSubpathPatterns(
       continue;
     }
 
+    const starReplacement = innerPath.slice(keyPrefix.length, innerPath.length - keySuffix.length);
+
     for (const valueToMatch of matchExportConditions(patternValue, exportConditions)) {
       if (valueToMatch === null) {
         return;
       }
-      const innerPathStarValue = innerPath.slice(keyPrefix.length, innerPath.length - keySuffix.length);
-      const valueStarIdx = valueToMatch.indexOf("*");
-      if (valueStarIdx === -1 || valueToMatch.indexOf("*", valueStarIdx + 1) !== -1) {
-        continue;
-      }
-      const valuePrefix = valueToMatch.slice(0, valueStarIdx);
-      const valueSuffix = valueToMatch.slice(valueStarIdx + 1);
-      matchedValues.push(valuePrefix + innerPathStarValue + valueSuffix);
+      matchedValues.push(valueToMatch.replace(/\*/g, starReplacement));
     }
   }
   yield* matchedValues;
