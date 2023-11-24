@@ -3,18 +3,19 @@ import type { ModuleAnalyzer, ModuleAnalyzerContext } from "./analyzer-types";
 
 export const svgAnalyzer: ModuleAnalyzer = {
   test: isSvgFile,
-  async analyze({ filePath, fs }) {
+  async analyze({ filePath, fs, searchParams }) {
     const fileContents = await fs.readFile(filePath);
-    const textContents = new TextDecoder().decode(fileContents);
 
-    return {
-      compiledContents: `${createBase64DataURIModule(filePath, fileContents)}
+    const textContents = new TextDecoder().decode(fileContents);
+    const targetExportName = searchParams?.has("react") ? "default" : "ReactComponent";
+
+    const compiledContents = `${createBase64DataURIModule(filePath, fileContents)}
 const React = require('react');
 
 const svgContents = ${JSON.stringify(textContents)};
 let svgElement;
 
-exports.ReactComponent = React.memo(function ReactComponent({ className, children, ...props }) {
+exports.${targetExportName} = React.memo(function ReactComponent({ className, children, ...props }) {
   if (!svgElement) {
     svgElement = new DOMParser().parseFromString(svgContents, "image/svg+xml").documentElement;
   }
@@ -50,7 +51,10 @@ exports.ReactComponent = React.memo(function ReactComponent({ className, childre
     },
     null
   );
-});\n`,
+});\n`;
+
+    return {
+      compiledContents,
       requests: ["react"],
     };
   },
