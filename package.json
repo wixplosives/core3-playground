@@ -17,7 +17,7 @@
     "@wixc3/postcss-modules": "^6.1.1",
     "idb": "^7.1.1",
     "js-base64": "^3.7.5",
-    "mime": "^3.0.0",
+    "mime": "^4.0.0",
     "monaco-editor": "^0.44.0",
     "postcss": "^8.4.31",
     "postcss-scss": "^4.0.9",
