@@ -1,4 +1,4 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb/with-async-ittr";
+import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import { playgroundDbName, playgroundDbVersion } from "../constants";
 import type { AnalyzedModule } from "./module-graph-resolver";
 
