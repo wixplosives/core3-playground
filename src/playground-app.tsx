@@ -134,12 +134,12 @@ export class PlaygroundApp {
               imageUrl: URL.createObjectURL(new Blob([await this.fs.readFile(itemId)], { type: imageMimeType })),
             }
           : altKey
-          ? { type: "preview", filePath: itemId }
-          : {
-              type: "code-editor",
-              filePath: itemId,
-              fileContents: await this.fs.readTextFile(itemId),
-            };
+            ? { type: "preview", filePath: itemId }
+            : {
+                type: "code-editor",
+                filePath: itemId,
+                fileContents: await this.fs.readTextFile(itemId),
+              };
         this.openFiles = [...this.openFiles, openFile];
         this.selectedFileIdx = this.openFiles.length - 1;
       }
