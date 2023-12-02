@@ -516,13 +516,13 @@ export function createResolutionFs(fs: BrowserFileSystem): IAsyncResolutionFileS
 
 /**
  * Parse a package specifier into a tuple of package name and path in package.
- * Handles both scoped and non-scoped package specifiers and returns a default path of '.' if no path is specified.
+ * Handles both scoped and non-scoped package specifiers and returns a default path of "." if no path is specified.
  *
  * @param specifier - The package specifier to parse.
- * @example parsePackageSpecifier('react-dom') === ['react-dom', "."]
- * @example parsePackageSpecifier('react-dom/client') === ['react-dom', './client']
- * @example parsePackageSpecifier('@stylable/core') === ['@stylable/core', "."]
- * @example parsePackageSpecifier('@stylable/core/dist/some-file') === ['@stylable/core', './dist/some-file']
+ * @example parsePackageSpecifier("react-dom") === ["react-dom", "."]
+ * @example parsePackageSpecifier("react-dom/client") === ["react-dom", "./client"]
+ * @example parsePackageSpecifier("@stylable/core") === ["@stylable/core", "."]
+ * @example parsePackageSpecifier("@stylable/core/dist/some-file") === ["@stylable/core", "./dist/some-file"]
  */
 function parsePackageSpecifier(specifier: string): readonly [packageName: string, pathInPackage: string] {
   const firstSlashIdx = specifier.indexOf("/");
