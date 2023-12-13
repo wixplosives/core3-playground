@@ -37,7 +37,7 @@ void (async () => {
   try {
     const catalogResponse = await fetch(schemaStoreCatalogURL);
     if (catalogResponse.ok) {
-      const { schemas } = JSON.parse(await catalogResponse.text()) as SchemaStoreCatalog;
+      const { schemas } = (await catalogResponse.json()) as SchemaStoreCatalog;
       monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
         enableSchemaRequest: true,
         schemas: schemas.map(({ url, fileMatch }) => ({ uri: url, fileMatch: fileMatch! })),
