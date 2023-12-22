@@ -80,10 +80,6 @@ export interface IBaseModuleSystemOptions {
    * `undefined` - couldn't resolve request.
    */
   resolveFrom(contextPath: string, request: string, requestOrigin?: string): string | false | undefined;
-  /**
-   * Hook into file module evaluation.
-   */
-  loadModuleHook?: ((loadModule: LoadModule) => LoadModule) | undefined;
 }
 
 const falseModule = {
@@ -98,18 +94,16 @@ const falseModule = {
 const evaluationErrorPrefix = "Failed evaluating: ";
 
 export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): ICommonJsModuleSystem {
-  const { resolveFrom, dirname, readFileSync, globals = {}, loadModuleHook } = options;
+  const { resolveFrom, dirname, readFileSync, globals = {} } = options;
   const requireCache = new Map<string, IModule>();
   const seenErrors = new WeakSet<Error>();
-
-  const load = loadModuleHook ? loadModuleHook(loadModule) : loadModule;
 
   return {
     requireModule(filePath) {
       if (filePath === false) {
         return {};
       }
-      const fileModule = requireCache.get(filePath) ?? load(filePath);
+      const fileModule = requireCache.get(filePath) ?? loadModule(filePath);
       return fileModule.exports;
     },
     requireFrom(contextPath, request) {
@@ -137,7 +131,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     if (resolvedPath === false) {
       return falseModule;
     }
-    return requireCache.get(resolvedPath) ?? load(resolvedPath);
+    return requireCache.get(resolvedPath) ?? loadModule(resolvedPath);
   }
 
   function loadModule(filePath: string): IModule {
