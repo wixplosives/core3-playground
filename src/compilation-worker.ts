@@ -2,6 +2,7 @@ import path from "@file-services/path";
 import type { ModuleAnalyzer, ModuleAnalyzerContext } from "./analyzers/analyzer-types";
 import { cssAnalyzer } from "./analyzers/css-analyzer";
 import { isJavaScriptFile, javascriptAnalyzer } from "./analyzers/javascript-analyzer";
+import { jsonAnalyzer } from "./analyzers/json-analyzer";
 import { sassAnalyzer } from "./analyzers/sass-analyzer";
 import { svgAnalyzer } from "./analyzers/svg-analyzer";
 import { typescriptAnalyzer } from "./analyzers/typescript-analyzer";
@@ -9,8 +10,8 @@ import { createBrowserFileSystem, type BrowserFileSystem } from "./fs/browser-fi
 import { createCssSpecifierResolver } from "./helpers/css";
 import { openPlaygroundDb, type PlaygroundDatabase } from "./helpers/indexed-db";
 import type { AnalyzedModule } from "./helpers/module-graph-resolver";
-import { createSassSpecifierResolver } from "./helpers/sass-resolver";
 import { evaluateSassLib } from "./helpers/sass-lib-evaluate";
+import { createSassSpecifierResolver } from "./helpers/sass-resolver";
 import {
   AsyncSpecifierResolverCache,
   createAsyncSpecifierResolver,
@@ -66,6 +67,7 @@ const moduleAnalyzers: ModuleAnalyzer[] = [
   cssAnalyzer,
   sassAnalyzer,
   svgAnalyzer,
+  jsonAnalyzer,
 ];
 
 export interface InitializeOptions {
