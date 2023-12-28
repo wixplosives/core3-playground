@@ -170,13 +170,13 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     const fnArgs = Object.keys(moduleBuiltins).join(", ");
     const globalsArgs = Object.keys(injectedGlobals).join(", ");
 
-    const globalFn = (0, eval)(`(function (${globalsArgs}){ return (function (${fnArgs}){${fileContents}\n}); })`) as (
-      ...args: unknown[]
-    ) => (...args: unknown[]) => void;
-
-    moduleCache.set(filePath, newModule);
-
     try {
+      moduleCache.set(filePath, newModule);
+
+      const globalFn = (0, eval)(
+        `(function (${globalsArgs}){ return (function (${fnArgs}){${fileContents}\n}); })`,
+      ) as (...args: unknown[]) => (...args: unknown[]) => void;
+
       const moduleFn = globalFn(...Object.values(injectedGlobals));
       moduleFn(...Object.values(moduleBuiltins));
     } catch (e) {
