@@ -6,19 +6,19 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
 
   const sassModuleSystem = singlePackageModuleSystem("sass", sassURL, sassLibText);
 
-  sassModuleSystem.requireCache.set("util", {
+  sassModuleSystem.moduleCache.set("util", {
     id: "util",
     filename: "util",
     exports: { inspect: {} },
     children: [],
   });
-  sassModuleSystem.requireCache.set("fs", {
+  sassModuleSystem.moduleCache.set("fs", {
     id: "fs",
     filename: "fs",
     exports: {},
     children: [],
   });
-  sassModuleSystem.requireCache.set("immutable", {
+  sassModuleSystem.moduleCache.set("immutable", {
     id: "immutable",
     filename: "immutable",
     exports: immutable,

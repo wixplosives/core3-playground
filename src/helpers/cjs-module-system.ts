@@ -1,15 +1,5 @@
 export interface ICommonJsModuleSystem {
   /**
-   * Map of file path to a loaded module.
-   */
-  requireCache: Map<string, IModule>;
-
-  /**
-   * Exposed to modules as globals.
-   */
-  globals: Record<string, unknown>;
-
-  /**
    * Require a module using an absolute file path.
    */
   requireModule: (moduleId: string | false) => unknown;
@@ -28,6 +18,16 @@ export interface ICommonJsModuleSystem {
    * `undefined` - couldn't resolve request.
    */
   resolveFrom: (contextPath: string, request: string, requestOrigin?: string) => string | false | undefined;
+
+  /**
+   * Map of file path to a loaded module.
+   */
+  moduleCache: Map<string, IModule>;
+
+  /**
+   * Exposed to modules as globals.
+   */
+  globals: Record<string, unknown>;
 }
 
 export interface IModule {
@@ -95,7 +95,7 @@ const evaluationErrorPrefix = "Failed evaluating: ";
 
 export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): ICommonJsModuleSystem {
   const { resolveFrom, dirname, readFileSync, globals = {} } = options;
-  const requireCache = new Map<string, IModule>();
+  const moduleCache = new Map<string, IModule>();
   const seenErrors = new WeakSet<Error>();
 
   return {
@@ -103,14 +103,14 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       if (filePath === false) {
         return {};
       }
-      const fileModule = requireCache.get(filePath) ?? loadModule(filePath);
+      const fileModule = moduleCache.get(filePath) ?? loadModule(filePath);
       return fileModule.exports;
     },
     requireFrom(contextPath, request) {
       return loadFrom(contextPath, request).exports;
     },
     resolveFrom,
-    requireCache,
+    moduleCache,
     globals,
   };
 
@@ -123,7 +123,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
   }
 
   function loadFrom(contextPath: string, request: string, requestOrigin?: string): IModule {
-    const existingRequestModule = requireCache.get(request);
+    const existingRequestModule = moduleCache.get(request);
     if (existingRequestModule) {
       return existingRequestModule;
     }
@@ -131,7 +131,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     if (resolvedPath === false) {
       return falseModule;
     }
-    return requireCache.get(resolvedPath) ?? loadModule(resolvedPath);
+    return moduleCache.get(resolvedPath) ?? loadModule(resolvedPath);
   }
 
   function loadModule(filePath: string): IModule {
@@ -142,7 +142,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
 
     if (filePath.endsWith(".json")) {
       newModule.exports = JSON.parse(fileContents);
-      requireCache.set(filePath, newModule);
+      moduleCache.set(filePath, newModule);
       return newModule;
     }
     const localRequire = (request: string) => {
@@ -174,13 +174,13 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       ...args: unknown[]
     ) => (...args: unknown[]) => void;
 
-    requireCache.set(filePath, newModule);
+    moduleCache.set(filePath, newModule);
 
     try {
       const moduleFn = globalFn(...Object.values(injectedGlobals));
       moduleFn(...Object.values(moduleBuiltins));
     } catch (e) {
-      requireCache.delete(filePath);
+      moduleCache.delete(filePath);
       if (e instanceof Error) {
         const originalMessage = seenErrors.has(e) ? e.message.slice(evaluationErrorPrefix.length) : e.message;
         e.message = `${evaluationErrorPrefix}${filePath} -> ${originalMessage}`;
