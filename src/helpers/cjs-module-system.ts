@@ -1,13 +1,9 @@
 export interface ICommonJsModuleSystem {
   /**
-   * Require a module using an absolute file path.
+   * Evaluate a module using an absolute file path.
+   * @returns the module's exports
    */
-  requireModule: (moduleId: string | false) => unknown;
-
-  /**
-   * Require a module from some context (directory path).
-   */
-  requireFrom: (contextPath: string, request: string) => unknown;
+  importModule: (moduleId: string) => Promise<unknown>;
 
   /**
    * Resolve a module request from some context (directory path).
@@ -82,6 +78,8 @@ export interface IBaseModuleSystemOptions {
   resolveFrom(contextPath: string, request: string, requestOrigin?: string): string | false | undefined;
 }
 
+export const ownDynamicImportFnName = "__dynamicImport";
+
 export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): ICommonJsModuleSystem {
   const { resolveFrom, dirname, readFileSync, globals = {} } = options;
   const moduleCache = new Map<string, IModule>();
@@ -97,15 +95,9 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
   };
 
   return {
-    requireModule(filePath) {
-      if (filePath === false) {
-        return {};
-      }
-      const fileModule = moduleCache.get(filePath) ?? loadModuleSync(filePath);
+    async importModule(filePath) {
+      const fileModule = moduleCache.get(filePath) ?? (await loadModule(filePath));
       return fileModule.exports;
-    },
-    requireFrom(contextPath, request) {
-      return loadFromSync(contextPath, request).exports;
     },
     resolveFrom,
     moduleCache,
@@ -128,6 +120,18 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     return resolvedRequest;
   }
 
+  async function loadFrom(contextPath: string, request: string, requestOrigin?: string): Promise<IModule> {
+    const existingRequestModule = moduleCache.get(request);
+    if (existingRequestModule) {
+      return existingRequestModule;
+    }
+    const resolvedPath = resolveThrow(contextPath, request, requestOrigin);
+    if (resolvedPath === false) {
+      return falseModule;
+    }
+    return moduleCache.get(resolvedPath) ?? (await loadModule(resolvedPath));
+  }
+
   function loadFromSync(contextPath: string, request: string, requestOrigin?: string): IModule {
     const existingRequestModule = moduleCache.get(request);
     if (existingRequestModule) {
@@ -140,11 +144,19 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     return moduleCache.get(resolvedPath) ?? loadModuleSync(resolvedPath);
   }
 
-  function loadModuleSync(filePath: string): IModule {
+  async function loadModule(filePath: string): Promise<IModule> {
     const newModule: IModule = { exports: {}, filename: filePath, id: filePath, children: [] };
 
     const contextPath = dirname(filePath);
     const fileContents = readFileSync(filePath);
+
+    const dynamicImport = async (specifier: string) => {
+      const childModule = await loadFrom(contextPath, specifier, filePath);
+      if (childModule !== falseModule && !newModule.children.includes(childModule)) {
+        newModule.children.push(childModule);
+      }
+      return childModule.exports;
+    };
 
     const localRequire = (request: string) => {
       const childModule = loadFromSync(contextPath, request, filePath);
@@ -161,6 +173,69 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       __filename: filePath,
       __dirname: contextPath,
       require: localRequire,
+      [ownDynamicImportFnName]: dynamicImport,
+    };
+
+    const injectedGlobals = {
+      global: globalThis,
+      ...globals,
+    };
+
+    try {
+      moduleCache.set(filePath, newModule);
+
+      if (filePath.endsWith(".json")) {
+        newModule.exports = JSON.parse(fileContents);
+        return newModule;
+      }
+
+      const fnArgs = Object.keys(moduleBuiltins).join(", ");
+      const globalsArgs = Object.keys(injectedGlobals).join(", ");
+      const globalFn = (0, eval)(
+        `(function (${globalsArgs}){ return (async function (${fnArgs}){${fileContents}\n}); })`,
+      ) as (...args: unknown[]) => (...args: unknown[]) => Promise<void>;
+
+      const moduleFn = globalFn(...Object.values(injectedGlobals));
+      await moduleFn(...Object.values(moduleBuiltins));
+    } catch (e) {
+      moduleCache.delete(filePath);
+      markErrorWithFilePath(e, filePath);
+      throw e;
+    }
+
+    return newModule;
+  }
+
+  function loadModuleSync(filePath: string): IModule {
+    const newModule: IModule = { exports: {}, filename: filePath, id: filePath, children: [] };
+
+    const contextPath = dirname(filePath);
+    const fileContents = readFileSync(filePath);
+
+    const dynamicImport = async (specifier: string) => {
+      const childModule = await loadFrom(contextPath, specifier, filePath);
+      if (childModule !== falseModule && !newModule.children.includes(childModule)) {
+        newModule.children.push(childModule);
+      }
+      return childModule.exports;
+    };
+
+    const localRequire = (request: string) => {
+      const childModule = loadFromSync(contextPath, request, filePath);
+      if (childModule !== falseModule && !newModule.children.includes(childModule)) {
+        newModule.children.push(childModule);
+      }
+      return childModule.exports;
+    };
+    localRequire.resolve = (request: string) => resolveThrow(contextPath, request, filePath);
+
+    const moduleBuiltins = {
+      module: newModule,
+      exports: newModule.exports,
+      __filename: filePath,
+      __dirname: contextPath,
+      require: localRequire,
+      [ownDynamicImportFnName]: dynamicImport,
     };
 
     const injectedGlobals = {

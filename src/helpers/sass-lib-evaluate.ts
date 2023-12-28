@@ -1,8 +1,13 @@
 import { singlePackageModuleSystem } from "./package-evaluation";
 
-export function evaluateSassLib(sassURL: string, sassLibText: string, immutableLibText: string, immutableURL: string) {
+export async function evaluateSassLib(
+  sassURL: string,
+  sassLibText: string,
+  immutableLibText: string,
+  immutableURL: string,
+) {
   const immutableJsModuleSystem = singlePackageModuleSystem("immutable", immutableURL, immutableLibText);
-  const immutable = immutableJsModuleSystem.requireModule(immutableURL) as typeof import("immutable");
+  const immutable = (await immutableJsModuleSystem.importModule(immutableURL)) as typeof import("immutable");
 
   const sassModuleSystem = singlePackageModuleSystem("sass", sassURL, sassLibText);
 
@@ -49,7 +54,7 @@ export function evaluateSassLib(sassURL: string, sassLibText: string, immutableL
   };
   type SassLoadFn = (deps: SassDeps, target: unknown) => void;
 
-  const sassExports = sassModuleSystem.requireModule(sassURL) as {
+  const sassExports = (await sassModuleSystem.importModule(sassURL)) as {
     load: SassLoadFn;
   };
   const load = sassExports.load ?? globalForSass._cliPkgExports?.[0]?.load;

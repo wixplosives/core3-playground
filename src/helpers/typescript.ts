@@ -1,4 +1,5 @@
 import type ts from "typescript";
+import { ownDynamicImportFnName } from "./cjs-module-system";
 import { singlePackageModuleSystem } from "./package-evaluation";
 import {
   filePathSourceMapPrefix,
@@ -7,7 +8,11 @@ import {
   overrideSourceMapFilePath,
   type SourceMapLike,
 } from "./source-maps";
-import { createHoistImportsTransformer } from "./transformers";
+import {
+  createHoistImportsTransformer,
+  createOwnDynamicImportTransformer,
+  createRequireToAwaitImportTransformer,
+} from "./transformers";
 
 export function compileUsingTypescript(
   userTs: typeof ts,
@@ -16,13 +21,16 @@ export function compileUsingTypescript(
   compilerOptions: ts.CompilerOptions,
 ): string {
   const hoistImportsTransformer = createHoistImportsTransformer(userTs);
+  const ownDynamicImportTransformer = createOwnDynamicImportTransformer(userTs, ownDynamicImportFnName);
+  const requireToAwaitImportTransformer = createRequireToAwaitImportTransformer(userTs, ownDynamicImportFnName);
 
   const start = performance.now();
   const { outputText, sourceMapText } = userTs.transpileModule(fileContents, {
     compilerOptions,
     fileName: filePath,
     transformers: {
-      before: [hoistImportsTransformer],
+      before: [hoistImportsTransformer, ownDynamicImportTransformer],
+      after: [requireToAwaitImportTransformer],
     },
   });
   performance.measure(`Transpile ${filePath}`, { start });
@@ -67,8 +75,8 @@ export function extractModuleRequests(
 } {
   const { ImportKeyword, ExportKeyword } = SyntaxKind;
 
-  function isRequireIdentifier(expression: ts.Expression): expression is ts.Identifier {
-    return isIdentifier(expression) && expression.text === "require";
+  function isRequireOrDynamicImportIdentifier(expression: ts.Expression): expression is ts.Identifier {
+    return isIdentifier(expression) && (expression.text === "require" || expression.text === ownDynamicImportFnName);
   }
 
   function isNodeEnvLookup(node: ts.Node): node is ts.PropertyAccessExpression {
@@ -106,7 +114,7 @@ export function extractModuleRequests(
       const isDynamicImportNode = isDynamicImportKeyword(node.expression);
       hasESM ||= isDynamicImportNode;
       if (
-        (isDynamicImportNode || isRequireIdentifier(node.expression)) &&
+        (isDynamicImportNode || isRequireOrDynamicImportIdentifier(node.expression)) &&
         node.arguments.length === 1 &&
         isStringLiteral(node.arguments[0]!)
       ) {
@@ -152,10 +160,10 @@ export function extractModuleRequests(
   return { specifiers, hasESM };
 }
 
-export function evaluateTypescriptLib(typescriptURL: string, typescriptText: string) {
+export async function evaluateTypescriptLib(typescriptURL: string, typescriptText: string) {
   typescriptText = fixTypescriptBundle(typescriptText);
   const typescriptModuleSystem = singlePackageModuleSystem("typescript", typescriptURL, typescriptText);
-  return typescriptModuleSystem.requireModule(typescriptURL) as typeof import("typescript");
+  return (await typescriptModuleSystem.importModule(typescriptURL)) as typeof import("typescript");
 }
 
 function fixTypescriptBundle(typescriptBundleText: string) {
