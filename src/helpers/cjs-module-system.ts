@@ -103,11 +103,11 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       if (filePath === false) {
         return {};
       }
-      const fileModule = moduleCache.get(filePath) ?? loadModule(filePath);
+      const fileModule = moduleCache.get(filePath) ?? loadModuleSync(filePath);
       return fileModule.exports;
     },
     requireFrom(contextPath, request) {
-      return loadFrom(contextPath, request).exports;
+      return loadFromSync(contextPath, request).exports;
     },
     resolveFrom,
     moduleCache,
@@ -122,7 +122,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     return resolvedRequest;
   }
 
-  function loadFrom(contextPath: string, request: string, requestOrigin?: string): IModule {
+  function loadFromSync(contextPath: string, request: string, requestOrigin?: string): IModule {
     const existingRequestModule = moduleCache.get(request);
     if (existingRequestModule) {
       return existingRequestModule;
@@ -131,10 +131,10 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     if (resolvedPath === false) {
       return falseModule;
     }
-    return moduleCache.get(resolvedPath) ?? loadModule(resolvedPath);
+    return moduleCache.get(resolvedPath) ?? loadModuleSync(resolvedPath);
   }
 
-  function loadModule(filePath: string): IModule {
+  function loadModuleSync(filePath: string): IModule {
     const newModule: IModule = { exports: {}, filename: filePath, id: filePath, children: [] };
 
     const contextPath = dirname(filePath);
@@ -146,7 +146,7 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       return newModule;
     }
     const localRequire = (request: string) => {
-      const childModule = loadFrom(contextPath, request, filePath);
+      const childModule = loadFromSync(contextPath, request, filePath);
       if (childModule !== falseModule && !newModule.children.includes(childModule)) {
         newModule.children.push(childModule);
       }
