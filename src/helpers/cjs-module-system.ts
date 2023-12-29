@@ -140,11 +140,6 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
     const contextPath = dirname(filePath);
     const fileContents = readFileSync(filePath);
 
-    if (filePath.endsWith(".json")) {
-      newModule.exports = JSON.parse(fileContents);
-      moduleCache.set(filePath, newModule);
-      return newModule;
-    }
     const localRequire = (request: string) => {
       const childModule = loadFromSync(contextPath, request, filePath);
       if (childModule !== falseModule && !newModule.children.includes(childModule)) {
@@ -167,12 +162,16 @@ export function createBaseCjsModuleSystem(options: IBaseModuleSystemOptions): IC
       ...globals,
     };
 
-    const fnArgs = Object.keys(moduleBuiltins).join(", ");
-    const globalsArgs = Object.keys(injectedGlobals).join(", ");
-
     try {
       moduleCache.set(filePath, newModule);
 
+      if (filePath.endsWith(".json")) {
+        newModule.exports = JSON.parse(fileContents);
+        return newModule;
+      }
+
+      const fnArgs = Object.keys(moduleBuiltins).join(", ");
+      const globalsArgs = Object.keys(injectedGlobals).join(", ");
       const globalFn = (0, eval)(
         `(function (${globalsArgs}){ return (function (${fnArgs}){${fileContents}\n}); })`,
       ) as (...args: unknown[]) => (...args: unknown[]) => void;
