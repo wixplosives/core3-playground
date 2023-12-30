@@ -7,17 +7,23 @@ import {
   overrideSourceMapFilePath,
   type SourceMapLike,
 } from "./source-maps";
+import { createHoistImportsTransformer } from "./transformers";
 
 export function compileUsingTypescript(
-  { transpileModule }: typeof ts,
+  userTs: typeof ts,
   filePath: string,
   fileContents: string,
   compilerOptions: ts.CompilerOptions,
 ): string {
+  const hoistImportsTransformer = createHoistImportsTransformer(userTs);
+
   const start = performance.now();
-  const { outputText, sourceMapText } = transpileModule(fileContents, {
+  const { outputText, sourceMapText } = userTs.transpileModule(fileContents, {
     compilerOptions,
     fileName: filePath,
+    transformers: {
+      before: [hoistImportsTransformer],
+    },
   });
   performance.measure(`Transpile ${filePath}`, { start });
 

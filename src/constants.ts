@@ -4,7 +4,7 @@ import { version as immutableVersion } from "immutable/package.json";
 import type { LibraryVersions } from "./processing-worker";
 
 export const playgroundDbName = "core3-playground";
-export const playgroundDbVersion = 2;
+export const playgroundDbVersion = 3;
 
 export const processingWorkerName = "Processing";
 export const processingBundleName = "processing-worker.js";
