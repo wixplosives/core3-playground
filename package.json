@@ -19,7 +19,7 @@
     "js-base64": "^3.7.5",
     "mime": "^4.0.1",
     "monaco-editor": "^0.45.0",
-    "postcss": "^8.4.32",
+    "postcss": "^8.4.33",
     "postcss-scss": "^4.0.9",
     "postcss-value-parser": "^4.2.0",
     "react": "^18.2.0",
