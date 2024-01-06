@@ -1,4 +1,3 @@
-import path from "@file-services/path";
 import { ignoreRejections } from "../helpers/javascript";
 import type { AsyncFileSystem, FileSystemDirectoryItem, FileSystemFileItem } from "./async-fs-api";
 
@@ -13,93 +12,93 @@ export function createBrowserFileSystem(
 ): BrowserFileSystem {
   return {
     root: rootDirectoryHandle,
-    async statFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(filePath);
+    async statFile(fileUrl) {
+      const fileHandle = await getEnsuredFileHandle(fileUrl);
       const file = await fileHandle.getFile();
       return {
         size: file.size,
         lastModified: file.lastModified,
       };
     },
-    async readFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(filePath);
+    async readFile(fileUrl) {
+      const fileHandle = await getEnsuredFileHandle(fileUrl);
       const file = await fileHandle.getFile();
       const arrayBuffer = await file.arrayBuffer();
       return new Uint8Array(arrayBuffer);
     },
     readTextFile,
-    async readJSONFile(filePath: string) {
-      const fileContents = await readTextFile(filePath);
-      return safeJSONParse(filePath, fileContents);
+    async readJSONFile(fileUrl) {
+      const fileContents = await readTextFile(fileUrl);
+      return safeJSONParse(fileUrl, fileContents);
     },
-    async fileExists(filePath) {
-      const fileHandle = await getFileHandle(filePath);
+    async fileExists(fileUrl) {
+      const fileHandle = await getFileHandle(fileUrl);
       return !!fileHandle;
     },
-    async directoryExists(directoryPath) {
-      const directoryHandle = await getDirectoryHandle(directoryPath);
+    async directoryExists(directoryUrl) {
+      const directoryHandle = await getDirectoryHandle(directoryUrl);
       return !!directoryHandle;
     },
-    async openFile(filePath) {
-      const fileHandle = await getEnsuredFileHandle(filePath);
-      return createFileItem(fileHandle, filePath);
+    async openFile(fileUrl) {
+      const fileHandle = await getEnsuredFileHandle(fileUrl);
+      return createFileItem(fileHandle, fileUrl);
     },
-    async openDirectory(directoryPath) {
-      const directoryHandle = await getDirectoryHandle(directoryPath);
+    async openDirectory(directoryUrl) {
+      const directoryHandle = await getDirectoryHandle(directoryUrl);
       if (!directoryHandle) {
-        throw new Error(`cannot get directory handle for ${directoryPath}`);
+        throw new Error(`cannot get directory handle for ${directoryUrl.href}`);
       }
-      return createDirectoryItem(directoryHandle, directoryPath);
+      return createDirectoryItem(directoryHandle, directoryUrl);
     },
   };
 
-  async function readTextFile(filePath: string) {
-    const fileHandle = await getEnsuredFileHandle(filePath);
+  async function readTextFile(fileUrl: URL) {
+    const fileHandle = await getEnsuredFileHandle(fileUrl);
     const file = await fileHandle.getFile();
     return file.text();
   }
 
-  async function getEnsuredFileHandle(filePath: string) {
-    const fileHandle = await getFileHandle(filePath);
+  async function getEnsuredFileHandle(fileUrl: URL) {
+    const fileHandle = await getFileHandle(fileUrl);
     if (!fileHandle) {
-      throw new Error(`cannot get file handle for ${filePath}`);
+      throw new Error(`cannot get file handle for ${fileUrl.href}`);
     }
     return fileHandle;
   }
 
-  async function getFileHandle(filePath: string): Promise<FileSystemFileHandle | undefined> {
-    if (fileHandleCache?.has(filePath)) {
-      return fileHandleCache.get(filePath);
+  async function getFileHandle(fileUrl: URL): Promise<FileSystemFileHandle | undefined> {
+    if (fileHandleCache?.has(fileUrl.href)) {
+      return fileHandleCache.get(fileUrl.href);
     }
-    const parentPath = path.dirname(filePath);
-    const parentHandle = await getDirectoryHandle(parentPath);
-    const fileName = path.basename(filePath);
+    const parentURL = new URL("..", fileUrl);
+    const parentHandle = await getDirectoryHandle(parentURL);
+    const fileName = basenameURL(fileUrl);
     const fileHandle = await ignoreRejections(parentHandle?.getFileHandle(fileName));
-    fileHandleCache?.set(filePath, fileHandle);
+    fileHandleCache?.set(fileUrl.href, fileHandle);
     return fileHandle;
   }
 
-  async function getDirectoryHandle(directoryPath: string): Promise<FileSystemDirectoryHandle | undefined> {
-    if (directoryHandleCache?.has(directoryPath)) {
-      return directoryHandleCache.get(directoryPath);
+  async function getDirectoryHandle(directoryUrl: URL): Promise<FileSystemDirectoryHandle | undefined> {
+    if (directoryHandleCache?.has(directoryUrl.href)) {
+      return directoryHandleCache.get(directoryUrl.href);
     }
-    const parentPath = path.dirname(directoryPath);
-    if (parentPath === directoryPath) {
+    const parentUrl = new URL("..", directoryUrl);
+    if (parentUrl.href === directoryUrl.href) {
       return rootDirectoryHandle;
     }
-    const parentHandle = await getDirectoryHandle(parentPath);
-    const directoryName = path.basename(directoryPath);
+    const parentHandle = await getDirectoryHandle(parentUrl);
+    const directoryName = basenameURL(directoryUrl);
     const directoryHandle = await ignoreRejections(parentHandle?.getDirectoryHandle(directoryName));
-    directoryHandleCache?.set(directoryPath, directoryHandle);
+    directoryHandleCache?.set(directoryUrl.href, directoryHandle);
     return directoryHandle;
   }
 }
 
-function createFileItem(fileHandle: FileSystemFileHandle, filePath: string): FileSystemFileItem {
+function createFileItem(fileHandle: FileSystemFileHandle, fileUrl: URL): FileSystemFileItem {
   return {
     type: "file",
     name: fileHandle.name,
-    path: filePath,
+    path: fileUrl,
     async stat() {
       const file = await fileHandle.getFile();
       return {
@@ -115,7 +114,7 @@ function createFileItem(fileHandle: FileSystemFileHandle, filePath: string): Fil
     async json() {
       const file = await fileHandle.getFile();
       const fileContents = await file.text();
-      return safeJSONParse(filePath, fileContents);
+      return safeJSONParse(fileUrl, fileContents);
     },
     async text() {
       const file = await fileHandle.getFile();
@@ -124,30 +123,26 @@ function createFileItem(fileHandle: FileSystemFileHandle, filePath: string): Fil
   };
 }
 
-function createDirectoryItem(
-  directoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string,
-): FileSystemDirectoryItem {
+function createDirectoryItem(directoryHandle: FileSystemDirectoryHandle, directoryUrl: URL): FileSystemDirectoryItem {
   return {
     type: "directory",
     name: directoryHandle.name,
-    path: directoryPath,
+    path: directoryUrl,
     get [Symbol.asyncIterator]() {
-      return () => createDirectoryIterator(directoryHandle, directoryPath);
+      return () => createDirectoryIterator(directoryHandle, directoryUrl);
     },
   };
 }
 
 async function* createDirectoryIterator(
   directoryHandle: FileSystemDirectoryHandle,
-  directoryPath: string,
+  directoryUrl: URL,
 ): AsyncGenerator<FileSystemDirectoryItem | FileSystemFileItem> {
   for await (const handle of readDirectoryHandleSorted(directoryHandle)) {
-    const itemPath = path.join(directoryPath, handle.name);
     if (handle.kind === "file") {
-      yield createFileItem(handle, itemPath);
+      yield createFileItem(handle, new URL(handle.name, directoryUrl));
     } else if (handle.kind === "directory") {
-      yield createDirectoryItem(handle, itemPath);
+      yield createDirectoryItem(handle, new URL(handle.name + "/", directoryUrl));
     }
   }
 }
@@ -174,10 +169,22 @@ async function* readDirectoryHandleSorted(directoryHandle: FileSystemDirectoryHa
   yield* files;
 }
 
-function safeJSONParse(filePath: string, fileContents: string) {
+function safeJSONParse(fileUrl: URL, fileContents: string) {
   try {
     return JSON.parse(fileContents) as unknown;
   } catch (e) {
-    throw new Error(`parsing ${filePath}`, { cause: e });
+    throw new Error(`parsing ${fileUrl.href}`, { cause: e });
   }
+}
+
+export function pathFromURL(url: URL) {
+  return decodeURIComponent(url.pathname);
+}
+
+function basenameURL(url: URL) {
+  let path = pathFromURL(url);
+  if (path.endsWith("/") && path.length > 1) {
+    path = path.slice(0, -1);
+  }
+  return path.split("/").pop()!;
 }

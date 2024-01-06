@@ -1,4 +1,3 @@
-import path from "@file-services/path";
 import type { IndentedList } from "../components/indented-list";
 import { directoryNameToIcon, fileNameToIcon } from "../helpers/icons";
 import { ignoreRejections } from "../helpers/javascript";
@@ -13,12 +12,12 @@ export async function* generateIndentedFsItems(
 ): AsyncGenerator<IndentedList.Item> {
   for await (const item of directoryItem) {
     const isDirectory = item.type === "directory";
-    const isExpanded = expandedDirectories.has(item.path);
+    const isExpanded = expandedDirectories.has(item.path.href);
     if (isDirectory && ignoredDirectories.has(item.name)) {
       continue;
     }
     yield {
-      id: item.path,
+      id: item.path.href,
       depth,
       label: item.name,
       iconUrl: isDirectory ? directoryNameToIcon(item.name, isExpanded) : fileNameToIcon(item.name),
@@ -30,18 +29,18 @@ export async function* generateIndentedFsItems(
   }
 }
 
-export function* pathChainToRoot(currentPath: string) {
-  let lastPath: string | undefined;
-  while (lastPath !== currentPath) {
-    yield currentPath;
-    lastPath = currentPath;
-    currentPath = path.dirname(currentPath);
+export function* pathChainToRoot(currentUrl: URL) {
+  let lastUrl: URL | undefined;
+  while (lastUrl?.href !== currentUrl.href) {
+    yield currentUrl;
+    lastUrl = currentUrl;
+    currentUrl = new URL("..", currentUrl);
   }
 }
 
-export async function findUp(contextPath: string, fileName: string, fs: BrowserFileSystem) {
-  for (const directoryPath of pathChainToRoot(contextPath)) {
-    const configFilePath = path.join(directoryPath, fileName);
+export async function findUp(contextUrl: URL, fileName: string, fs: BrowserFileSystem) {
+  for (const directoryUrl of pathChainToRoot(contextUrl)) {
+    const configFilePath = new URL(fileName, directoryUrl);
     const configFileHandle = await ignoreRejections(fs.openFile(configFilePath));
     if (configFileHandle) {
       return configFileHandle;
