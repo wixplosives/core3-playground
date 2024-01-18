@@ -90,8 +90,8 @@ async function initialize({
   immutableLibText,
 }: InitializeOptions): Promise<void> {
   fs = createBrowserFileSystem(rootDirectory, fileHandleCache, directoryHandleCache);
-  ts = evaluateTypescriptLib(typescriptURL, typescriptLibText);
-  sass = evaluateSassLib(sassURL, sassLibText, immutableLibText, immutableURL);
+  ts = await evaluateTypescriptLib(typescriptURL, typescriptLibText);
+  sass = await evaluateSassLib(sassURL, sassLibText, immutableLibText, immutableURL);
 
   const resolutionFs = createResolutionFs(fs);
 

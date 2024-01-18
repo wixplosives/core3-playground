@@ -40,7 +40,7 @@ export async function evaluateAndRender(moduleGraph: ModuleGraph, entryPaths: st
   });
 
   for (const entryPath of entryPaths) {
-    const moduleExports = moduleSystem.requireModule(entryPath);
+    const moduleExports = await moduleSystem.importModule(entryPath);
     if (isReactBoard(moduleExports)) {
       const containerId = "PREVIEW_ROOT";
       const renderingContainer =
