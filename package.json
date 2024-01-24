@@ -33,7 +33,7 @@
     "@types/wicg-file-system-access": "^2023.10.4",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@wixc3/react-board": "^2.3.0",
-    "esbuild": "^0.19.11",
+    "esbuild": "^0.19.12",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.33.2",
