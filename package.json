@@ -31,7 +31,7 @@
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "@types/wicg-file-system-access": "^2023.10.4",
-    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@wixc3/react-board": "^2.4.0",
     "esbuild": "^0.20.1",
     "eslint": "^8.56.0",
@@ -40,7 +40,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "open": "^10.0.3",
     "prettier": "^3.2.5",
-    "sass": "^1.71.0",
+    "sass": "^1.71.1",
     "type-fest": "^4.10.3",
     "typescript": "~5.3.3"
   },
