@@ -41,7 +41,7 @@
     "open": "^10.1.0",
     "prettier": "^3.2.5",
     "sass": "^1.72.0",
-    "type-fest": "^4.12.0",
+    "type-fest": "^4.13.0",
     "typescript": "~5.4.2"
   },
   "keywords": [],
