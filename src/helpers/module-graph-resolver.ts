@@ -34,7 +34,7 @@ export interface ModuleGraphResolverOptions {
    * @param filePath unique identifier for an asset to extract from.
    * @returns list of dependency requests by the asset.
    */
-  analyzeModule(filePath: string): Promise<AnalyzedModule>;
+  analyzeModule(filePath: string, searchParams?: string): Promise<AnalyzedModule>;
 
   /**
    * Resolve a dependency request by an asset.
@@ -80,15 +80,20 @@ async function analyzeAndResolve(
   resolveRequest: ModuleGraphResolverOptions["resolveRequest"],
   moduleGraph: ModuleGraph,
   workInProgress: Map<string, Promise<[string, ModuleGraphNode]>>,
+  searchParams?: string,
 ): Promise<[string, ModuleGraphNode]> {
-  const { compiledContents, requests } = await analyzeModule(filePath);
+  const { compiledContents, requests } = await analyzeModule(filePath, searchParams);
   const resolvedRequests: ResolvedRequests = new Map();
 
   for (const request of requests) {
     if (resolvedRequests.has(request)) {
       continue;
     }
-    const resolvedRequest = await resolveRequest(filePath, request);
+    const paramsIdx = request.indexOf("?");
+    const hasParams = paramsIdx !== -1;
+    const requestWithoutParams = hasParams ? request.slice(0, paramsIdx) : request;
+    const requestParams = hasParams ? request.slice(paramsIdx) : undefined;
+    const resolvedRequest = await resolveRequest(filePath, requestWithoutParams);
     resolvedRequests.set(request, resolvedRequest);
     if (
       typeof resolvedRequest === "string" &&
@@ -97,7 +102,7 @@ async function analyzeAndResolve(
     ) {
       workInProgress.set(
         resolvedRequest,
-        analyzeAndResolve(resolvedRequest, analyzeModule, resolveRequest, moduleGraph, workInProgress),
+        analyzeAndResolve(resolvedRequest, analyzeModule, resolveRequest, moduleGraph, workInProgress, requestParams),
       );
     }
   }

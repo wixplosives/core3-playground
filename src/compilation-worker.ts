@@ -124,7 +124,7 @@ async function initialize({
   db = await openPlaygroundDb();
 }
 
-async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
+async function analyzeModule(filePath: string, searchParams?: string): Promise<AnalyzedModule> {
   if (!fs) {
     throw new Error("fs was not initialized");
   } else if (!db) {
@@ -146,6 +146,7 @@ async function analyzeModule(filePath: string): Promise<AnalyzedModule> {
     specifierResolver,
     cssAssetResolver,
     sassModuleResolver,
+    searchParams: searchParams ? new URLSearchParams(searchParams) : undefined,
   };
 
   const cacheKey = await getCacheKey(analyzerContext, packageVersionCache);
@@ -179,7 +180,7 @@ async function getCacheKey(
   if (!isJavaScriptFile(analyzerContext)) {
     return;
   }
-  const { filePath, fs } = analyzerContext;
+  const { filePath, fs, searchParams } = analyzerContext;
   const nodeModulesFragment = "/node_modules/";
   const nodeModulesIdx = filePath.lastIndexOf(nodeModulesFragment);
   if (nodeModulesIdx === -1) {
@@ -191,7 +192,10 @@ async function getCacheKey(
   const packageName = getNameFromPackagePath(packageFilePath);
   const packagePath = path.join(nodeModulesPath, packageName);
   const packageVersion = await getPackageVersion(packagePath, fs, packageVersionCache);
-  return packageVersion ? `${packageName}@${packageVersion}/${path.relative(packagePath, filePath)}` : undefined;
+  const cachePostfix = searchParams ? "?" + searchParams.toString() : "";
+  return packageVersion
+    ? `${packageName}@${packageVersion}/${path.relative(packagePath, filePath)}${cachePostfix}`
+    : undefined;
 }
 
 function getNameFromPackagePath(packageFilePath: string): string {

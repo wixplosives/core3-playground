@@ -121,11 +121,11 @@ async function calculateModuleGraph(
   let compilationWorkerIndex = 0;
 
   const graphResolver = createModuleGraphResolver({
-    analyzeModule(filePath) {
+    analyzeModule(filePath, searchParams) {
       const worker = compilationWorkers[compilationWorkerIndex]!;
       compilationWorkerIndex++;
       compilationWorkerIndex %= compilationWorkers.length;
-      return worker.api.analyzeModule(filePath);
+      return worker.api.analyzeModule(filePath, searchParams);
     },
     async resolveRequest(filePath, specifier) {
       const parentDirectory = path.dirname(filePath);

@@ -11,6 +11,7 @@ export interface ModuleAnalyzerContext {
   specifierResolver: AsyncSpecifierResolver;
   cssAssetResolver: AsyncSpecifierResolver;
   sassModuleResolver: AsyncSpecifierResolver;
+  searchParams?: URLSearchParams | undefined;
 }
 
 export interface ModuleAnalyzer {
