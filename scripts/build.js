@@ -17,6 +17,7 @@ const buildOptions = {
   outdir: "dist",
   format: "esm",
   legalComments: "none",
+  treeShaking: true,
   bundle: true,
   target: "es2022",
   entryPoints: ["src/main.ts", "src/preview.ts", "src/processing-worker.ts", "src/compilation-worker.ts"],
