@@ -1,4 +1,4 @@
-import { createBaseCjsModuleSystem } from "./cjs-module-system";
+import { createBaseCjsModuleSystem } from "@file-services/commonjs";
 
 export function singlePackageModuleSystem(packageName: string, packageURL: string, packageLibText: string) {
   return createBaseCjsModuleSystem({
