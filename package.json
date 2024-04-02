@@ -30,7 +30,7 @@
   "devDependencies": {
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/node": "20",
-    "@types/react": "^18.2.73",
+    "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.23",
     "@types/wicg-file-system-access": "^2023.10.5",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
