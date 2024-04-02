@@ -67,7 +67,7 @@ function createCompilerOptions(ts: typeof import("typescript")): import("typescr
     target: ts.ScriptTarget.Latest,
     module: ts.ModuleKind.CommonJS,
     esModuleInterop: true,
-    jsx: ts.JsxEmit.ReactJSX,
+    jsx: ts.JsxEmit.ReactJSXDev,
     sourceMap: true,
     inlineSources: true,
   };
