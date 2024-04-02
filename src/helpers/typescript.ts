@@ -1,12 +1,5 @@
 import type ts from "typescript";
 import { singlePackageModuleSystem } from "./package-evaluation";
-import {
-  filePathSourceMapPrefix,
-  hasSingleSource,
-  inlineJsSourceMap,
-  overrideSourceMapFilePath,
-  type SourceMapLike,
-} from "./source-maps";
 import { createHoistImportsTransformer } from "./transformers";
 
 export function compileUsingTypescript(
@@ -14,7 +7,7 @@ export function compileUsingTypescript(
   filePath: string,
   fileContents: string,
   compilerOptions: ts.CompilerOptions,
-): string {
+): { outputText: string; sourceMapText?: string | undefined } {
   const hoistImportsTransformer = createHoistImportsTransformer(userTs);
 
   const start = performance.now();
@@ -27,15 +20,7 @@ export function compileUsingTypescript(
   });
   performance.measure(`Transpile ${filePath}`, { start });
 
-  if (sourceMapText) {
-    const originalSourceMap = JSON.parse(sourceMapText) as SourceMapLike;
-    const sourceFilePath = filePathSourceMapPrefix + filePath;
-    const fixedSourceMap = hasSingleSource(originalSourceMap)
-      ? overrideSourceMapFilePath(originalSourceMap, sourceFilePath)
-      : originalSourceMap;
-    return inlineJsSourceMap(fixedSourceMap, outputText);
-  }
-  return outputText;
+  return { outputText, sourceMapText };
 }
 
 export type ExtractionMode = "production" | "development";

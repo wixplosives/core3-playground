@@ -4,6 +4,10 @@ import type { AsyncSpecifierResolver } from "./specifier-resolver";
 import { createBase64DataURI } from "./url";
 
 export interface SourceMapLike {
+  version: 3;
+  names: string[];
+  mappings: string;
+  file?: string;
   sources?: string[];
   sourcesContent?: string[];
 }
@@ -13,12 +17,11 @@ const jsSourceMapURLPrefix = `//# sourceMappingURL=`;
 const cssSourceMapURLPrefix = `/*# sourceMappingURL=`;
 
 export function inlineJsSourceMap(sourceMap: SourceMapLike, outputText: string): string {
+  const base64SourceMapUri = createBase64DataURI(JSON.stringify(sourceMap), `application/json`);
   const sourceMappingURLIdx = outputText.lastIndexOf(jsSourceMapURLPrefix);
-  if (sourceMappingURLIdx !== -1) {
-    const base64SourceMapUri = createBase64DataURI(JSON.stringify(sourceMap), `application/json`);
-    return outputText.slice(0, sourceMappingURLIdx + jsSourceMapURLPrefix.length) + base64SourceMapUri;
-  }
-  return outputText;
+  return sourceMappingURLIdx !== -1
+    ? outputText.slice(0, sourceMappingURLIdx + jsSourceMapURLPrefix.length) + base64SourceMapUri
+    : outputText + `\n${jsSourceMapURLPrefix}${base64SourceMapUri}`;
 }
 function inlineCssSourceMap(sourceMap: SourceMapLike, outputText: string): string {
   const sourceMappingURLIdx = outputText.lastIndexOf(cssSourceMapURLPrefix);
@@ -29,37 +32,27 @@ function inlineCssSourceMap(sourceMap: SourceMapLike, outputText: string): strin
   return outputText;
 }
 
-export function overrideSourceMapFilePath(sourceMap: SourceMapLike, filePath: string): SourceMapLike {
-  const sourceMapCopy: SourceMapLike = { ...sourceMap };
-  sourceMapCopy.sources = [filePath];
-  return sourceMapCopy;
-}
-
-export function hasSingleSource({ sources }: SourceMapLike) {
-  return Array.isArray(sources) && sources.length === 1 && typeof sources[0] === "string";
-}
-
-export async function inlineExternalJsSourceMap(
+export async function getReferencedSourceMap(
   filePath: string,
   fileContents: string,
   fs: BrowserFileSystem,
   resolver: AsyncSpecifierResolver,
-  sourceURLPrefix = filePathSourceMapPrefix,
-) {
+): Promise<{ sourceMap: SourceMapLike; sourceMappingURLIdx: number } | undefined> {
   const sourceMappingURLIdx = fileContents.lastIndexOf(jsSourceMapURLPrefix);
 
-  if (sourceMappingURLIdx !== -1) {
-    const sourceMapTarget = fileContents.slice(sourceMappingURLIdx + jsSourceMapURLPrefix.length).trim();
-    if (isNotLocalSourceMap(sourceMapTarget)) {
-      return fileContents;
-    }
-    const { resolvedFile: resolvedMapPath } = await resolver(path.dirname(filePath), `./${sourceMapTarget}`);
-    if (resolvedMapPath && path.extname(resolvedMapPath) === ".map") {
-      const sourceMap = await inlineSourcesIntoSourceMap(fs, resolvedMapPath, resolver);
-      return inlineJsSourceMap(sourceMap, fileContents);
-    }
+  if (sourceMappingURLIdx === -1) {
+    return;
   }
-  return `${fileContents}\n//# sourceURL=${sourceURLPrefix + filePath}\n`;
+  const sourceMapTarget = fileContents.slice(sourceMappingURLIdx + jsSourceMapURLPrefix.length).trim();
+  if (isNotLocalSourceMap(sourceMapTarget)) {
+    return;
+  }
+  const { resolvedFile: resolvedMapPath } = await resolver(path.dirname(filePath), `./${sourceMapTarget}`);
+  if (!resolvedMapPath || path.extname(resolvedMapPath) !== ".map") {
+    return;
+  }
+  const sourceMap = await inlineSourcesIntoSourceMap(fs, resolvedMapPath, resolver);
+  return { sourceMap, sourceMappingURLIdx };
 }
 
 export async function inlineExternalCssSourceMap(
@@ -112,4 +105,14 @@ async function inlineSourcesIntoSourceMap(
     }
   }
   return sourceMap;
+}
+
+export function createEmptySourceMap(filePath: string, fileContents: string): SourceMapLike {
+  return {
+    version: 3,
+    sources: [filePathSourceMapPrefix + filePath],
+    sourcesContent: [fileContents],
+    mappings: "",
+    names: [],
+  };
 }

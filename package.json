@@ -13,6 +13,7 @@
     "prettify": "prettier --write ."
   },
   "dependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@file-services/commonjs": "^9.1.0",
     "@file-services/path": "^9.1.0",
     "@wixc3/postcss-modules": "^6.1.1",
