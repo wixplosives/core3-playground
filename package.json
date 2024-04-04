@@ -42,7 +42,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "open": "^10.1.0",
     "prettier": "^3.2.5",
-    "sass": "^1.72.0",
+    "sass": "^1.74.1",
     "type-fest": "^4.15.0",
     "typescript": "~5.4.3"
   },
