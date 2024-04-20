@@ -8,6 +8,7 @@ import {
   createAsyncSpecifierResolver,
   createCachedResolver,
   createResolutionFs,
+  type AsyncSpecifierResolver,
   type IAsyncSpecifierResolverOptions,
 } from "./helpers/specifier-resolver";
 import { rpcResponder } from "./rpc/rpc-responder";
@@ -106,6 +107,17 @@ async function calculateModuleGraph(
   const specifierResolver = createCachedResolver(
     createAsyncSpecifierResolver({ fs: resolutionFs, ...resolverOptions }),
   );
+
+  const viteCompatResolver: AsyncSpecifierResolver = async (parentDirectory, specifier) => {
+    if (path.posix.isAbsolute(specifier)) {
+      const filePathInPublic = path.join("/public", specifier);
+      if (await fs.fileExists(filePathInPublic)) {
+        return { resolvedFile: filePathInPublic, visitedPaths: new Set([filePathInPublic]) };
+      }
+    }
+    return specifierResolver(parentDirectory, specifier);
+  };
+
   const cjsSpecifierResolver = createCachedResolver(
     createAsyncSpecifierResolver({
       fs: resolutionFs,
@@ -127,7 +139,7 @@ async function calculateModuleGraph(
     },
     async resolveRequest(filePath, specifier) {
       const parentDirectory = path.dirname(filePath);
-      const resolver = specifierNeedsCjs(specifier) ? cjsSpecifierResolver : specifierResolver;
+      const resolver = specifierNeedsCjs(specifier) ? cjsSpecifierResolver : viteCompatResolver;
       const { resolvedFile } = await resolver(parentDirectory, specifier);
       return resolvedFile;
     },
