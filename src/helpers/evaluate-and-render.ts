@@ -39,13 +39,12 @@ export async function evaluateAndRender(moduleGraph: ModuleGraph, entryPaths: st
     },
   });
 
+  const renderingContainer = document.body.appendChild(document.createElement("div"));
+  renderingContainer.id = "root";
+
   for (const entryPath of entryPaths) {
     const moduleExports = moduleSystem.requireModule(entryPath);
     if (isReactBoard(moduleExports)) {
-      const containerId = "PREVIEW_ROOT";
-      const renderingContainer =
-        document.getElementById(containerId) ?? document.body.appendChild(document.createElement("div"));
-      renderingContainer.id = containerId;
       await moduleExports.default.render(renderingContainer);
     }
   }
