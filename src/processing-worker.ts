@@ -86,9 +86,7 @@ async function resolveSpecifier(
 ): Promise<string | undefined | false> {
   const fs = createBrowserFileSystem(rootHandle);
 
-  const specifierResolver = createCachedResolver(
-    createAsyncSpecifierResolver({ fs: createResolutionFs(fs), ...resolverOptions }),
-  );
+  const specifierResolver = createAsyncSpecifierResolver({ fs: createResolutionFs(fs), ...resolverOptions });
   const { resolvedFile } = await specifierResolver(contextPath, specifier);
   return resolvedFile;
 }
