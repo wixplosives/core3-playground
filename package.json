@@ -19,7 +19,7 @@
     "@wixc3/postcss-modules": "^6.1.1",
     "idb": "^8.0.0",
     "js-base64": "^3.7.7",
-    "mime": "^4.0.1",
+    "mime": "^4.0.2",
     "monaco-editor": "^0.48.0",
     "postcss": "^8.4.38",
     "postcss-scss": "^4.0.9",
@@ -43,7 +43,7 @@
     "open": "^10.1.0",
     "prettier": "^3.2.5",
     "sass": "^1.75.0",
-    "type-fest": "^4.16.0",
+    "type-fest": "^4.17.0",
     "typescript": "~5.4.5"
   },
   "keywords": [],
