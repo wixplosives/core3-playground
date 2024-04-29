@@ -43,7 +43,7 @@
     "open": "^10.1.0",
     "prettier": "^3.2.5",
     "sass": "^1.75.0",
-    "type-fest": "^4.17.0",
+    "type-fest": "^4.18.0",
     "typescript": "~5.4.5"
   },
   "keywords": [],
