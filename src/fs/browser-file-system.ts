@@ -21,6 +21,12 @@ export function createBrowserFileSystem(
         lastModified: file.lastModified,
       };
     },
+    async writeFile(filePath, contents) {
+      const fileHandle = await getEnsuredFileHandle(filePath);
+      const writable = await fileHandle.createWritable();
+      await writable.write(contents);
+      await writable.close();
+    },
     async readFile(filePath) {
       const fileHandle = await getEnsuredFileHandle(filePath);
       const file = await fileHandle.getFile();

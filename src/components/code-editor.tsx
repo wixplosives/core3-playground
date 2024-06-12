@@ -1,5 +1,5 @@
 import { Uri, editor } from "monaco-editor";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 export namespace CodeEditor {
   export interface Props {
@@ -7,26 +7,24 @@ export namespace CodeEditor {
     value?: string | undefined;
     filePath?: string | undefined;
     language?: string | undefined;
+    onChange?: ((filePath: string, value: string) => void) | undefined;
   }
 }
 
-const CodeEditor: React.FC<CodeEditor.Props> = ({ className, value = "", filePath, language }) => {
-  const containerRef = React.createRef<HTMLDivElement>();
 
+const CodeEditor: React.FC<CodeEditor.Props> = ({ className, value = "", filePath, language, onChange }) => {
+  const containerRef = React.createRef<HTMLDivElement>();
+  const ctrl = useMemo(() => new CodeEditorController(), []);
+  useEffect(() => ctrl.createMonacoEditor(containerRef.current!), [ctrl, containerRef]);
   useEffect(() => {
     const model = editor.createModel(value, language, filePath ? Uri.file(filePath) : undefined);
-    const codeEditor = editor.create(containerRef.current!, {
-      model,
-      theme: "vs-dark",
-    });
-    const resizeCodeEditor = () => codeEditor.layout();
-    window.addEventListener("resize", resizeCodeEditor);
+    ctrl.setModel(model);
+    const changeListener = model.onDidChangeContent(() => onChange?.(filePath || "", model.getValue()));
     return () => {
-      window.removeEventListener("resize", resizeCodeEditor);
-      codeEditor.dispose();
+      changeListener.dispose();
       model.dispose();
     };
-  });
+  }, [value, filePath, language, onChange, ctrl]);
 
   return <div className={className} ref={containerRef} />;
 };
@@ -37,3 +35,25 @@ const MemoizedCodeEditor = React.memo(CodeEditor);
 
 export { MemoizedCodeEditor as CodeEditor };
 export default MemoizedCodeEditor;
+
+class CodeEditorController {
+  codeEditor!: editor.IStandaloneCodeEditor;
+  createMonacoEditor(el: HTMLDivElement) {
+    if (this.codeEditor) {
+      this.codeEditor.dispose();
+    }
+    this.codeEditor = editor.create(el, { theme: "vs-dark" });
+    return this.bindEvents();
+  }
+  setModel(model: editor.ITextModel) {
+    this.codeEditor.setModel(model);
+  }
+  private bindEvents() {
+    const resizeCodeEditor = () => this.codeEditor.layout();
+    window.addEventListener("resize", resizeCodeEditor);
+    return () => {
+      window.removeEventListener("resize", resizeCodeEditor);
+      this.codeEditor.dispose();
+    };
+  }
+}
