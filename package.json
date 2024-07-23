@@ -44,7 +44,7 @@
     "prettier": "^3.3.3",
     "sass": "^1.77.8",
     "type-fest": "^4.23.0",
-    "typescript": "~5.5.3"
+    "typescript": "~5.5.4"
   },
   "keywords": [],
   "author": "Wix.com",
