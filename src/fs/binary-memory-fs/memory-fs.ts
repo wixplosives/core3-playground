@@ -172,9 +172,6 @@ export function createMemoryFs(): IMemFileSystem {
   }
 
   function writeFileSync(filePath: string, fileContent: string | Uint8Array, _options?: WriteFileOptions): void {
-    if (_options) {
-      _options;
-    }
     if (filePath === "") {
       throw createFsError(filePath, FsErrorCodes.NO_FILE_OR_DIRECTORY, "ENOENT");
     }
