@@ -8,7 +8,7 @@
     "build": "node scripts/build.js",
     "start": "node scripts/build.js --watch",
     "test": "npm run typecheck && npm run lint && npm run build",
-    "lint": "eslint .",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "prettify": "prettier --write ."
   },
@@ -28,23 +28,24 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.8.0",
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/node": "20",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/wicg-file-system-access": "^2023.10.5",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@wixc3/react-board": "^3.0.1",
     "esbuild": "^0.23.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.35.0",
-    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-hooks": "5.1.0-rc-8269d55d-20240802",
     "open": "^10.1.0",
     "prettier": "^3.3.3",
     "sass": "^1.77.8",
     "type-fest": "^4.23.0",
-    "typescript": "~5.5.4"
+    "typescript": "~5.5.4",
+    "typescript-eslint": "^8.0.0"
   },
   "keywords": [],
   "author": "Wix.com",
