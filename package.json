@@ -28,7 +28,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/node": "20",
     "@types/react": "^18.3.3",
@@ -36,7 +36,7 @@
     "@types/wicg-file-system-access": "^2023.10.5",
     "@wixc3/react-board": "^3.0.1",
     "esbuild": "^0.23.0",
-    "eslint": "^9.8.0",
+    "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "5.1.0-rc.0",
