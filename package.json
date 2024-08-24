@@ -20,7 +20,7 @@
     "idb": "^8.0.0",
     "js-base64": "^3.7.7",
     "mime": "^4.0.4",
-    "monaco-editor": "^0.50.0",
+    "monaco-editor": "^0.51.0",
     "postcss": "^8.4.41",
     "postcss-scss": "^4.0.9",
     "postcss-value-parser": "^4.2.0",
@@ -28,7 +28,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.9.0",
+    "@eslint/js": "^9.9.1",
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/node": "20",
     "@types/react": "^18.3.4",
@@ -36,7 +36,7 @@
     "@types/wicg-file-system-access": "^2023.10.5",
     "@wixc3/react-board": "^3.0.1",
     "esbuild": "^0.23.1",
-    "eslint": "^9.9.0",
+    "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "5.1.0-rc.0",
