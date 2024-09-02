@@ -21,7 +21,7 @@
     "js-base64": "^3.7.7",
     "mime": "^4.0.4",
     "monaco-editor": "^0.51.0",
-    "postcss": "^8.4.41",
+    "postcss": "^8.4.44",
     "postcss-scss": "^4.0.9",
     "postcss-value-parser": "^4.2.0",
     "react": "^18.3.1",
