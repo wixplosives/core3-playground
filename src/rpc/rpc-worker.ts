@@ -6,10 +6,7 @@ export interface RPCWorker<T extends object> {
   close(): void;
 }
 
-export function createRPCWorker<T extends object>(
-  workerURL: URL,
-  workerOptions?: WorkerOptions | undefined,
-): RPCWorker<T> {
+export function createRPCWorker<T extends object>(workerURL: URL, workerOptions?: WorkerOptions): RPCWorker<T> {
   const listenerController = new AbortController();
   const worker = new Worker(workerURL, workerOptions);
 
