@@ -12,6 +12,7 @@ export function compileUsingTypescript(
 
   const start = performance.now();
   const { outputText, sourceMapText } = userTs.transpileModule(fileContents, {
+    fileName: filePath.endsWith(".mjs") ? filePath + ".js" : filePath,
     compilerOptions,
     transformers: {
       before: [hoistImportsTransformer],
