@@ -1,6 +1,7 @@
 import path from "@file-services/path";
 import type { Compilation, InitializeOptions } from "./compilation-worker";
 import { compilationBundleName, compilationWorkerName, defaultCompilationWorkerCount, wixUnpkgURL } from "./constants";
+import { findUp } from "./fs/async-fs-operations";
 import { createBrowserFileSystem } from "./fs/browser-file-system";
 import { fetchText } from "./helpers/dom";
 import { createModuleGraphResolver, type ModuleGraph } from "./helpers/module-graph-resolver";
@@ -110,9 +111,12 @@ async function calculateModuleGraph(
 
   const viteCompatResolver: AsyncSpecifierResolver = async (parentDirectory, specifier) => {
     if (path.posix.isAbsolute(specifier)) {
-      const filePathInPublic = path.join("/public", specifier);
-      if (await fs.fileExists(filePathInPublic)) {
-        return { resolvedFile: filePathInPublic, visitedPaths: new Set([filePathInPublic]) };
+      const closestPackageJson = await findUp(parentDirectory, "package.json", fs);
+      if (closestPackageJson) {
+        const filePathInPublic = path.join(path.dirname(closestPackageJson.path), "public", specifier);
+        if (await fs.fileExists(filePathInPublic)) {
+          return { resolvedFile: filePathInPublic, visitedPaths: new Set([filePathInPublic]) };
+        }
       }
     }
     return specifierResolver(parentDirectory, specifier);
