@@ -13,7 +13,6 @@ export function compileUsingTypescript(
   const start = performance.now();
   const { outputText, sourceMapText } = userTs.transpileModule(fileContents, {
     compilerOptions,
-    fileName: filePath,
     transformers: {
       before: [hoistImportsTransformer],
     },
