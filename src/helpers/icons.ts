@@ -20,17 +20,12 @@ function matchFileIcon(fileName: string): string | undefined {
 const directoryIconPath = (iconName: string) => `icons/folder/${iconName}.svg`;
 
 export function directoryNameToIcon(directoryName: string, isExpanded: boolean): string {
-  const iconName =
-    matchDirectoryIcon(directoryName, isExpanded) ??
-    matchDirectoryIcon(directoryName.toLowerCase(), isExpanded) ??
-    (isExpanded ? iconsCatalog.folderExpanded : iconsCatalog.folder);
+  const iconName = isExpanded
+    ? (getExactOrLowercase(iconsCatalog.folderNamesExpanded, directoryName) ?? iconsCatalog.folderExpanded)
+    : (getExactOrLowercase(iconsCatalog.folderNames, directoryName) ?? iconsCatalog.folder);
   return directoryIconPath(iconName);
 }
 
-function matchDirectoryIcon(directoryName: string, isExpanded: boolean): string | undefined {
-  if (isExpanded) {
-    return iconsCatalog.folderNamesExpanded[directoryName];
-  } else {
-    return iconsCatalog.folderNames[directoryName];
-  }
+function getExactOrLowercase<V>(obj: Record<string, V>, key: string): V | undefined {
+  return obj[key] ?? obj[key.toLowerCase()];
 }
