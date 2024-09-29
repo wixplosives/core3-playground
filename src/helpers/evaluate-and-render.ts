@@ -1,10 +1,12 @@
 import { createBaseCjsModuleSystem } from "@file-services/commonjs";
 import path from "@file-services/path";
 import type { IReactBoard } from "@wixc3/react-board";
+import { activate } from "react-devtools-inline/backend";
 import { isPlainObject } from "./javascript";
 import type { ModuleGraph } from "./module-graph-resolver";
 
 export async function evaluateAndRender(moduleGraph: ModuleGraph, entryPaths: string | string[]) {
+  activate(window);
   entryPaths = Array.isArray(entryPaths) ? entryPaths : [entryPaths];
   const moduleSystem = createBaseCjsModuleSystem({
     dirname: path.dirname,

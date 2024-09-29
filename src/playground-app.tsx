@@ -19,6 +19,7 @@ import type { Preview } from "./preview";
 import { type LibraryVersions, type Processing } from "./processing-worker";
 import { createRPCIframe, type RPCIframe } from "./rpc/rpc-iframe";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
+import { createBridge, createStore, type DevtoolsProps } from "react-devtools-inline/frontend";
 
 export class PlaygroundApp {
   private fs: BrowserFileSystem | undefined;
@@ -29,6 +30,7 @@ export class PlaygroundApp {
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
   private processing?: RPCWorker<Processing> | undefined;
   private previews = new Map<string, RPCIframe<Preview>>();
+  private devToolsProps = new Map<string, DevtoolsProps>();
 
   // passed to UI
   private openFiles: readonly Editor.OpenFile[] = [];
@@ -69,12 +71,14 @@ export class PlaygroundApp {
           onTabClose={this.onTabClose}
           onPreviewLoad={this.registerPreview}
           onPreviewClose={this.closePreview}
+          devToolsPropsMap={this.devToolsProps}
         />
       </React.StrictMode>,
     );
   }
 
   private registerPreview = async (filePath: string, iframe: HTMLIFrameElement) => {
+    console.log("registerPreview", filePath);
     const previewRPC = createRPCIframe<Preview>(iframe);
     const existingRPC = this.previews.get(filePath);
     if (existingRPC) {
@@ -102,9 +106,19 @@ export class PlaygroundApp {
     if (moduleGraph && this.previews.get(filePath) === previewRPC) {
       await previewRPC.api.evaluateAndRender(moduleGraph, entryModules);
     }
+    if (!this.devToolsProps.has(filePath)) {
+      const bridge = createBridge(iframe.contentWindow!);
+      bridge.shutdown = () => {
+        this.devToolsProps.delete(filePath);
+      };
+      const store = createStore(bridge);
+      this.devToolsProps = new Map(this.devToolsProps).set(filePath, { store, bridge });
+      this.renderApp();
+    }
   };
 
   private closePreview = (filePath: string) => {
+    console.log("closePreview", filePath);
     const previewRPC = this.previews.get(filePath);
     if (previewRPC) {
       previewRPC.close();
