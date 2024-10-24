@@ -13,7 +13,7 @@ export const compilationBundleName = "compilation-worker.js";
 export const defaultCompilationWorkerCount = 4;
 export const defaultLibVersions: LibraryVersions = {
   typescript: tsVersion,
-  sass: "1.80.3", // sassVersion
+  sass: "1.80.4", // sassVersion
   immutable: immutableVersion,
 };
 export const previewIframeHTMLIndex = "preview.html";
