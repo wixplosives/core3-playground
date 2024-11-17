@@ -19,6 +19,23 @@ import type { Preview } from "./preview";
 import { type LibraryVersions, type Processing } from "./processing-worker";
 import { createRPCIframe, type RPCIframe } from "./rpc/rpc-iframe";
 import { createRPCWorker, type RPCWorker } from "./rpc/rpc-worker";
+import { createBridge, createStore, type DevtoolsProps } from "react-devtools-inline/frontend";
+import { initialize } from "react-devtools-inline/frontend";
+
+// for react-devtools-inline/frontend
+const typeMap = new WeakMap<object, unknown>();
+const ModdedReact = React as unknown as {
+  unstable_getCacheForType<T>(r: () => T): T;
+};
+ModdedReact.unstable_getCacheForType ??= function <T>(resourceType: () => T): T {
+  const cached = typeMap.get(resourceType) as T | undefined;
+  if (cached) {
+    return cached;
+  }
+  const resource = resourceType();
+  typeMap.set(resourceType, resource);
+  return resource;
+};
 
 export class PlaygroundApp {
   private fs: BrowserFileSystem | undefined;
@@ -29,6 +46,7 @@ export class PlaygroundApp {
   private savedDirectoryHandles?: Record<string, FileSystemDirectoryHandle> | undefined;
   private processing?: RPCWorker<Processing> | undefined;
   private previews = new Map<string, RPCIframe<Preview>>();
+  private devTools = new Map<string, React.ComponentType<DevtoolsProps>>();
 
   // passed to UI
   private openFiles: readonly Editor.OpenFile[] = [];
@@ -69,12 +87,14 @@ export class PlaygroundApp {
           onTabClose={this.onTabClose}
           onPreviewLoad={this.registerPreview}
           onPreviewClose={this.closePreview}
+          devTools={this.devTools}
         />
       </React.StrictMode>,
     );
   }
 
   private registerPreview = async (filePath: string, iframe: HTMLIFrameElement) => {
+    this.connectDevTools(filePath, iframe);
     const previewRPC = createRPCIframe<Preview>(iframe);
     const existingRPC = this.previews.get(filePath);
     if (existingRPC) {
@@ -102,6 +122,31 @@ export class PlaygroundApp {
     if (moduleGraph && this.previews.get(filePath) === previewRPC) {
       await previewRPC.api.evaluateAndRender(moduleGraph, entryModules);
     }
+    this.renderApp();
+  };
+
+  private connectDevTools = (filePath: string, iframe: HTMLIFrameElement) => {
+    const messageChannel = new MessageChannel();
+    messageChannel.port1.start();
+    iframe.contentWindow?.postMessage({ type: "connect-devtools" }, "*", [messageChannel.port2]);
+
+    const bridge = createBridge(undefined!, {
+      listen(listener) {
+        const proxyListener = ({ data }: MessageEvent) => {
+          listener(data);
+        };
+        messageChannel.port1.addEventListener("message", proxyListener);
+        return () => {
+          messageChannel.port1.removeEventListener("message", proxyListener);
+        };
+      },
+      send(event, payload: unknown, transferable) {
+        messageChannel.port1.postMessage({ event, payload }, transferable as Transferable[]);
+      },
+    });
+    bridge.shutdown = () => {};
+    const store = createStore(bridge);
+    this.devTools = new Map(this.devTools).set(filePath, initialize(undefined!, { bridge, store }));
   };
 
   private closePreview = (filePath: string) => {
@@ -110,6 +155,7 @@ export class PlaygroundApp {
       previewRPC.close();
       this.previews.delete(filePath);
     }
+    this.devTools.delete(filePath);
   };
 
   private onFileTreeItemClick = async (itemId: string, itemType: string, altKey: boolean) => {
