@@ -1,3 +1,4 @@
+import { activate, createBridge, type Wall } from "react-devtools-inline/backend";
 import { evaluateAndRender } from "./helpers/evaluate-and-render";
 import { isPlainObject } from "./helpers/javascript";
 import { rpcResponder } from "./rpc/rpc-responder";
@@ -10,19 +11,39 @@ export interface Preview {
 globalThis.addEventListener("message", onMessage);
 
 function onMessage(event: MessageEvent<unknown>): void {
-  if (!isConnectMessage(event.data) || !event.ports[0]) {
-    return;
+  if (isMessage(event.data, "connect") && event.ports[0]) {
+    const [port] = event.ports;
+    const { onCall } = rpcResponder<Preview>({
+      api: { evaluateAndRender },
+      dispatchResponse: (response) => port.postMessage(response),
+    });
+    port.addEventListener("message", (event) => onCall(event.data as RpcCall<Preview>));
+    port.start();
+  } else if (isMessage(event.data, "connect-devtools") && event.ports[0]) {
+    const [port] = event.ports;
+    port.start();
+    const bridge = createBridge({} as Window, createWallFromPort(port));
+    activate(window, { bridge });
   }
-  globalThis.removeEventListener("message", onMessage);
-  const [port] = event.ports;
-  const { onCall } = rpcResponder<Preview>({
-    api: { evaluateAndRender },
-    dispatchResponse: (response) => port.postMessage(response),
-  });
-  port.addEventListener("message", (event) => onCall(event.data as RpcCall<Preview>));
-  port.start();
 }
 
-function isConnectMessage(value: unknown): value is { type: "connect" } {
-  return isPlainObject(value) && "type" in value && value.type === "connect";
+function isMessage(value: unknown, type: string): value is { type: string } {
+  return isPlainObject(value) && "type" in value && value.type === type;
+}
+
+function createWallFromPort(port: MessagePort): Wall {
+  return {
+    listen(listener) {
+      const proxyListener = ({ data }: MessageEvent) => {
+        listener(data);
+      };
+      port.addEventListener("message", proxyListener);
+      return () => {
+        port.removeEventListener("message", proxyListener);
+      };
+    },
+    send(event, payload: unknown, transferable) {
+      port.postMessage({ event, payload }, transferable as Transferable[]);
+    },
+  };
 }
