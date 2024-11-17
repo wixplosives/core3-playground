@@ -42,6 +42,10 @@ const buildOptions = {
   plugins: [
     globalExternals({
       "monaco-editor": { varName: "monaco", namedExports: ["editor", "Uri", "languages"] },
+      "react-devtools-inline/backend": {
+        varName: "reactDevtoolsInlineBackend",
+        namedExports: ["activate", "initialize", "createBridge"],
+      },
     }),
   ],
   alias,
@@ -80,6 +84,7 @@ async function buildVendors() {
       "src/vendors/monaco-generic-worker.ts",
       "src/vendors/monaco-html-worker.ts",
       "src/vendors/monaco-json-worker.ts",
+      "src/vendors/react-devtools-inline-backend.ts",
     ],
     loader: {
       ".ttf": "file",

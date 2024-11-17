@@ -12,7 +12,17 @@
 }
 
 .previewIframe {
-  flex: 1;
   width: 100%;
   border: none;
+}
+
+.sideBySide {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  gap: 1em;
+
+  & > * {
+    flex: 1;
+  }
 }

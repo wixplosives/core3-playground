@@ -10,6 +10,7 @@ import { Preview } from "./preview";
 import { Sidebar } from "./sidebar";
 import { StatusBar } from "./status-bar";
 import { Tabs } from "./tabs";
+import type { DevtoolsProps } from "react-devtools-inline";
 
 const CodeEditor = React.lazy(async () => {
   await Promise.all([loadScript(monacoJsBundle), loadStylesheet(monacoCssBundle)]);
@@ -30,6 +31,7 @@ export namespace Editor {
     onClearSaved?: FileExplorer.Props["onClearSaved"];
     onPreviewLoad?: Preview.Props["onPreviewLoad"];
     onPreviewClose?: Preview.Props["onPreviewClose"];
+    devTools?: Map<string, React.ComponentType<DevtoolsProps>>;
   }
 
   export type OpenFile = OpenTextFile | OpenImageFile | Preview;
@@ -66,6 +68,7 @@ export const Editor = React.memo<Editor.Props>(
     onTabClose,
     onPreviewLoad,
     onPreviewClose,
+    devTools,
   }) => {
     const tabs = useMemo(
       () =>
@@ -105,6 +108,7 @@ export const Editor = React.memo<Editor.Props>(
                 filePath={openFile.filePath}
                 onPreviewLoad={onPreviewLoad}
                 onPreviewClose={onPreviewClose}
+                DevTools={devTools?.get(openFile.filePath)}
                 key={openFile.filePath}
               />
             )}
