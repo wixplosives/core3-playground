@@ -42,7 +42,7 @@
     "open": "^10.1.0",
     "prettier": "^3.3.3",
     "sass": "^1.81.0",
-    "type-fest": "^4.27.0",
+    "type-fest": "^4.28.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.15.0"
   },
