@@ -42,9 +42,9 @@
     "open": "^10.1.0",
     "prettier": "^3.4.1",
     "sass": "^1.81.0",
-    "type-fest": "^4.29.1",
+    "type-fest": "^4.30.0",
     "typescript": "~5.7.2",
-    "typescript-eslint": "^8.16.0"
+    "typescript-eslint": "^8.17.0"
   },
   "keywords": [],
   "author": "Wix.com",
