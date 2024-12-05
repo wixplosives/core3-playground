@@ -30,10 +30,9 @@
   "devDependencies": {
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/node": "20",
-    "@types/react": "^18.3.13",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/wicg-file-system-access": "^2023.10.5",
-    "@wixc3/react-board": "^4.6.0",
     "esbuild": "^0.24.0",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
