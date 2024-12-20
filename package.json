@@ -33,7 +33,7 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@types/wicg-file-system-access": "^2023.10.5",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.24.1",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.2",
