@@ -11,3 +11,7 @@ declare module "*.svg" {
 declare module "monaco-editor/esm/vs/editor/edcore.main" {
   export * from "monaco-editor";
 }
+
+declare module "~sass/package.json" {
+  export const version: string;
+}

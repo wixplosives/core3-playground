@@ -1,5 +1,5 @@
 import { version as tsVersion } from "typescript/package.json";
-// import { version as sassVersion } from "sass/package.json";
+import { version as sassVersion } from "~sass/package.json";
 import { version as immutableVersion } from "immutable/package.json";
 import type { LibraryVersions } from "./processing-worker";
 
@@ -13,7 +13,7 @@ export const compilationBundleName = "compilation-worker.js";
 export const defaultCompilationWorkerCount = 4;
 export const defaultLibVersions: LibraryVersions = {
   typescript: tsVersion,
-  sass: "1.82.0", // sassVersion
+  sass: sassVersion,
   immutable: immutableVersion,
 };
 export const previewIframeHTMLIndex = "preview.html";

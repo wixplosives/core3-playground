@@ -1,14 +1,19 @@
 // @ts-check
 
-import fs from "node:fs/promises";
-import { build, context } from "esbuild";
 import { globalExternals } from "@fal-works/esbuild-plugin-global-externals";
+import { build, context } from "esbuild";
+import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import open, { apps } from "open";
 
 const port = 8000;
 const isWatch = process.argv.includes("--watch") || process.argv.includes("-w");
 const outPath = new URL("../dist/", import.meta.url);
 const publicPath = new URL("../public/", import.meta.url);
+
+const alias = {
+  "~sass/package.json": fileURLToPath(new URL("../node_modules/sass/package.json", import.meta.url)),
+};
 
 /** @type {import('esbuild').BuildOptions} */
 const buildOptions = {
@@ -39,6 +44,7 @@ const buildOptions = {
       "monaco-editor": { varName: "monaco", namedExports: ["editor", "Uri", "languages"] },
     }),
   ],
+  alias,
 };
 
 await fs.rm(outPath, { recursive: true, force: true });
@@ -80,6 +86,7 @@ async function buildVendors() {
     },
     minify: !isWatch,
     sourcemap: isWatch,
+    alias,
   });
 }
 
