@@ -37,15 +37,18 @@
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "open": "^10.1.0",
     "prettier": "^3.5.2",
     "sass": "^1.85.1",
-    "type-fest": "^4.35.0",
-    "typescript": "~5.7.3",
+    "type-fest": "^4.36.0",
+    "typescript": "~5.8.2",
     "typescript-eslint": "^8.25.0"
   },
   "keywords": [],
   "author": "Wix.com",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "typescript": "~5.8.2"
+  }
 }

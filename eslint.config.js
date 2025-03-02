@@ -10,7 +10,7 @@ export default [
   pluginJs.configs.recommended,
 
   ...pluginTypescript.configs.recommendedTypeChecked,
-  { languageOptions: { parserOptions: { projectService: true } } },
+  { languageOptions: { parserOptions: { projectService: true, warnOnUnsupportedTypeScriptVersion: false } } },
 
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat["jsx-runtime"],
