@@ -43,12 +43,9 @@
     "sass": "^1.85.1",
     "type-fest": "^4.36.0",
     "typescript": "~5.8.2",
-    "typescript-eslint": "^8.25.0"
+    "typescript-eslint": "^8.26.0"
   },
   "keywords": [],
   "author": "Wix.com",
-  "license": "MIT",
-  "overrides": {
-    "typescript": "~5.8.2"
-  }
+  "license": "MIT"
 }
