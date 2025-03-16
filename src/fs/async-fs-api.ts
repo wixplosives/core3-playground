@@ -1,5 +1,6 @@
 export interface AsyncFileSystem {
   statFile(filePath: string): Promise<FileSystemStats>;
+  writeFile(filePath: string, contents: FileSystemWriteChunkType): Promise<void>;
   readFile(filePath: string): Promise<Uint8Array>;
   readTextFile(filePath: string): Promise<string>;
   readJSONFile(filePath: string): Promise<unknown>;
