@@ -35,7 +35,7 @@
     "@types/wicg-file-system-access": "^2023.10.6",
     "esbuild": "^0.25.2",
     "eslint": "^9.24.0",
-    "eslint-config-prettier": "^10.1.1",
+    "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "open": "^10.1.0",
     "prettier": "^3.5.3",
