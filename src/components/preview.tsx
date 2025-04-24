@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { previewIframeHTMLIndex } from "../constants";
 import { classNames } from "../helpers/dom";
 import classes from "./preview.module.css";
@@ -16,18 +16,14 @@ export namespace Preview {
 
 export const Preview: React.FC<Preview.Props> = React.memo(({ className, filePath, onPreviewLoad, onPreviewClose }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeSrc, setIframeSrc] = useState(previewIframeHTMLIndex);
 
   const onReloadClick = () => {
-    setIframeSrc(aboutBlank);
+    iframeRef.current?.contentWindow?.location.replace(aboutBlank);
+    iframeRef.current?.contentWindow?.location.replace(previewIframeHTMLIndex);
   };
 
   const onLoad: React.ReactEventHandler<HTMLIFrameElement> = ({ currentTarget }) => {
-    if (iframeSrc === aboutBlank) {
-      setIframeSrc(previewIframeHTMLIndex);
-    } else {
-      onPreviewLoad?.(filePath, currentTarget);
-    }
+    onPreviewLoad?.(filePath, currentTarget);
   };
 
   useEffect(
@@ -44,7 +40,7 @@ export const Preview: React.FC<Preview.Props> = React.memo(({ className, filePat
       </button>
       <iframe
         className={classes["previewIframe"]}
-        src={iframeSrc}
+        src={previewIframeHTMLIndex}
         ref={iframeRef}
         data-file-path={filePath}
         onLoad={onLoad}
