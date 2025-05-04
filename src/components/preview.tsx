@@ -3,8 +3,6 @@ import { previewIframeHTMLIndex } from "../constants";
 import { classNames } from "../helpers/dom";
 import classes from "./preview.module.css";
 
-const aboutBlank = "about:blank";
-
 export namespace Preview {
   export interface Props {
     className?: string | undefined;
@@ -18,8 +16,7 @@ export const Preview: React.FC<Preview.Props> = React.memo(({ className, filePat
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const onReloadClick = () => {
-    iframeRef.current?.contentWindow?.location.replace(aboutBlank);
-    iframeRef.current?.contentWindow?.location.replace(previewIframeHTMLIndex);
+    iframeRef.current!.src = previewIframeHTMLIndex;
   };
 
   const onLoad: React.ReactEventHandler<HTMLIFrameElement> = ({ currentTarget }) => {
