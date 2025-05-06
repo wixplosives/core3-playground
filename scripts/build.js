@@ -58,7 +58,7 @@ await buildVendors();
 
 if (isWatch) {
   const buildContext = await context(buildOptions);
-  await buildContext.serve({ servedir: "dist", port });
+  await buildContext.serve({ servedir: "dist", port, cors: { origin: "*" } });
   await buildContext.watch();
   await open(`http://localhost:${port}`, { app: { name: apps.chrome } });
 } else {
