@@ -69,10 +69,14 @@ export class PlaygroundApp {
           onTabClose={this.onTabClose}
           onPreviewLoad={this.registerPreview}
           onPreviewClose={this.closePreview}
+          onCodeEditorChange={this.onCodeEditorChange}
         />
       </React.StrictMode>,
     );
   }
+  private onCodeEditorChange = (filePath: string, fileContents: string) => {
+    this.fs?.writeFile(filePath, fileContents).catch(console.error);
+  };
 
   private registerPreview = async (filePath: string, iframe: HTMLIFrameElement) => {
     const previewRPC = createRPCIframe<Preview>(iframe);

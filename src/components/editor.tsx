@@ -30,6 +30,7 @@ export namespace Editor {
     onClearSaved?: FileExplorer.Props["onClearSaved"];
     onPreviewLoad?: Preview.Props["onPreviewLoad"];
     onPreviewClose?: Preview.Props["onPreviewClose"];
+    onCodeEditorChange?: Preview.Props["onCodeEditorChange"];
   }
 
   export type OpenFile = OpenTextFile | OpenImageFile | Preview;
@@ -66,6 +67,7 @@ export const Editor = React.memo<Editor.Props>(
     onTabClose,
     onPreviewLoad,
     onPreviewClose,
+    onCodeEditorChange,
   }) => {
     const tabs = useMemo(
       () =>
@@ -88,6 +90,7 @@ export const Editor = React.memo<Editor.Props>(
                   value={openFile.fileContents}
                   filePath={openFile.filePath}
                   key={openFile.filePath}
+                  onChange={onCodeEditorChange}
                 />
               </Suspense>
             )}

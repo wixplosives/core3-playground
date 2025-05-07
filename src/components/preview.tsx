@@ -9,6 +9,7 @@ export namespace Preview {
     filePath: string;
     onPreviewLoad?: ((filePath: string, iframe: HTMLIFrameElement) => unknown) | undefined;
     onPreviewClose?: ((filePath: string) => unknown) | undefined;
+    onCodeEditorChange?: ((filePath: string, value: string) => void) | undefined;
   }
 }
 
