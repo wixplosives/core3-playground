@@ -25,7 +25,7 @@
     "postcss-scss": "^4.0.9",
     "postcss-value-parser": "^4.2.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
