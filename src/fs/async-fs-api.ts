@@ -1,6 +1,6 @@
 export interface AsyncFileSystem {
   statFile(filePath: string): Promise<FileSystemStats>;
-  readFile(filePath: string): Promise<Uint8Array>;
+  readFile(filePath: string): Promise<Uint8Array<ArrayBuffer>>;
   readTextFile(filePath: string): Promise<string>;
   readJSONFile(filePath: string): Promise<unknown>;
   fileExists(filePath: string): Promise<boolean>;
@@ -15,7 +15,7 @@ export interface FileSystemFileItem {
   name: string;
   path: string;
   stat(): Promise<FileSystemStats>;
-  buffer(): Promise<Uint8Array>;
+  buffer(): Promise<Uint8Array<ArrayBuffer>>;
   text(): Promise<string>;
   json(): Promise<unknown>;
 }
