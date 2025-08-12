@@ -18,7 +18,7 @@
     "@file-services/path": "^10.0.1",
     "@wixc3/postcss-modules": "^6.1.1",
     "idb": "^8.0.3",
-    "js-base64": "^3.7.7",
+    "js-base64": "^3.7.8",
     "mime": "^4.0.7",
     "monaco-editor": "^0.52.2",
     "postcss": "^8.5.6",
